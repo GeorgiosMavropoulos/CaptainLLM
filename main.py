@@ -1,20 +1,31 @@
 ##import tokenizer
-from tokenizer.tokenizer import Tokenizer
-from vocabulary.vocabulary import Vocabulary
+from tokenizer_bpe.__tokenizer import tokenizer
 
+#main class
+def main():
 
+   #text example
+   text = (
+           "Akwirw ier"
+           )
+   #call tokenizer method
+   text_to_id = tokenizer.encoder(text)
 
-#test to see if it works
-text1 = """"It's the last he painted, you know,"
-Mrs. Gisburn said with pardonable pride."""
-text2 = "Hello, do you like tea?"
+   ##print all id's
+   for i in text_to_id:
+      print(i)
+   for token in text_to_id:
+      print(tokenizer.decoder([token]))
 
-##connect the strings
-text = "<|endoftext|> ".join((text1,text2)) #join the texts and add between the endoftext token
-tokenizer = Tokenizer("the_verdict.txt")
-ids = tokenizer.encode(text2)
-#try to decode it
-decoded_text = tokenizer.decode(ids)
+   #call the decoder method
+   id_to_string = tokenizer.decoder(text_to_id)
 
-print(ids)
-print(decoded_text)
+ 
+
+   #print results
+   #print(text_to_id)
+   print(id_to_string)
+
+#execute main
+main()
+   

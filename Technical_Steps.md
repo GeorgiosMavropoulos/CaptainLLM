@@ -40,5 +40,13 @@ length, the shorter texts are extended or “padded” using the [PAD] token, up
 the length of the longest text in the batch.
 
 
+### The steps mentioned above indicate how to tokenization works under the hood. However, real pros use tiktoken which implementes the Byte Pair Encoder (BPE) used in GPT models. I am going to implement it using tiktoken. Tiktoken already contains the vocabulary so you skip the vocabulary creation!
+
+# Installation
+1. pip install tiktoken
+2. Initialize tokenizer getting gpts encoding `self.tokenizer = tk.get_encoding("o200k_base")`
+"o200k_base" is the latest. Search for the latest if there's any newer
+
+
 
 
