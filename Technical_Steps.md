@@ -117,7 +117,22 @@ batch_size → how many sequences each batch contains
 Use drop_last=True to drop the last incomplete batch if exists.
 
 
-
-
+## Create token embeddings
+The last step in preparing the input text for LLM training is to convert the token IDs
+into embedding vectors. As a preliminary step, we must initialize these embedding weights with random values.
+This initialization serves as the starting
+point for the LLM’s learning process.
+The embedding weights are initialized with random values and are learned during training. 
+The embedding matrix contains one vector for each token in the vocabulary. 
+The token ID is used as an index to look up the corresponding embedding vector.
+However, this token embedding does not contain information about the token’s position in the sequence. 
+Since self-attention is not inherently aware of token order, positional information is added. 
+Absolute positional information tells the model the exact position of a token in the sequence, while relative positional information describes the position of a token relative to other tokens.
+## Example
+The embedding matrix contains one vector for each token in the vocabulary, and the token ID is used to look up its corresponding embedding vector.
+However, the token embedding itself does not contain information about the token’s position in the sequence. 
+For example, in the sentence “The bank is near the river,” the model needs to know not only what the token bank is, but also where it appears and how it relates to other tokens such as near and river.
+This contextual information helps the model understand that bank refers to a river bank rather than a financial institution.
+Absolute positional information tells the model the exact position of a token, while relative positional information describes how tokens are positioned in relation to one another.
 
 
