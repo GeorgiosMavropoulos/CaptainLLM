@@ -30,7 +30,7 @@ def main():
 #execute main
 main()
    """
-
+import torch
 ##test DataLoad from pytorch
 def main():
  #instanciate LoadData 
@@ -56,13 +56,19 @@ def main():
  # in order to iterate through the batches and fetch the next entry
  data_iter = iter(dataloader)
  inputs, targets = next(data_iter)
- print("Inputs:\n", inputs)
- print("\nTargets:\n", targets)
+ #print("Inputs:\n", inputs)
+ #print("\nTargets:\n", targets)
 
 
 #call the main method
 main()
- 
+  ##test the embedding vectors
+input_ids = torch.tensor([2, 3, 5, 1])
+vocab_size = 6
+output_dim = 3
+torch.manual_seed(123)
+embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
+print(embedding_layer(input_ids))
 
  
 
