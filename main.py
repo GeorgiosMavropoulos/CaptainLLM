@@ -43,11 +43,13 @@ def main():
 
  #load text
  initial_text = load_text()
-
+ vocab_size = 50257
+ output_dim = 256
+ token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim) #create the embedding layer
  ##call create_dataset_v1 from LoadData class 
  # in order to prepare the test and train the model using the auto-regressive method.
  #For this example I will use a small batch_size
- dataloader =load_data_pytorch.create_dataloader_v1( initial_text,
+ dataloader =load_data_pytorch.create_dataloader_v1(initial_text,
     batch_size=8,
     max_length=4,
     stride=4,
@@ -56,19 +58,30 @@ def main():
  # in order to iterate through the batches and fetch the next entry
  data_iter = iter(dataloader)
  inputs, targets = next(data_iter)
- #print("Inputs:\n", inputs)
- #print("\nTargets:\n", targets)
+ token_embeddings = token_embedding_layer(inputs) #create the original embeddings
+ context_length = 4 # give the value of the max length
+ #print(token_embeddings.shape)
+
+  #create the position embeddings that have the same embedding dimension as the token_embedding_layer
+ pos_embedding_layer = torch.nn.Embedding(context_length, output_dim) ##create the embeddings and arrange each of embedding into one of the positions the algorithm below created
+ pos_embeddings = pos_embedding_layer(torch.arange(context_length)) #create the number of weight's positions (4 in our case)
+
+ #add the original embeddings into the the pos_embeddings in each of the 8 batches
+ input_embeddings = token_embeddings + pos_embeddings
+ print(input_embeddings.shape)
+ 
+ #print(pos_embeddings.shape)
+ #print("Token IDs:\n", inputs)
+ #print("\nInputs shape:\n", inputs.shape)
 
 
 #call the main method
 main()
   ##test the embedding vectors
-input_ids = torch.tensor([2, 3, 5, 1])
-vocab_size = 6
-output_dim = 3
-torch.manual_seed(123)
-embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
-print(embedding_layer(input_ids))
+#input_ids = torch.tensor([2, 3, 5, 1])
+#vocab_size = 50257
+#output_dim = 256
+#torch.manual_seed(123)
 
  
 
