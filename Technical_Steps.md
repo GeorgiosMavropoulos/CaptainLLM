@@ -133,6 +133,13 @@ The embedding matrix contains one vector for each token in the vocabulary, and t
 However, the token embedding itself does not contain information about the token’s position in the sequence. 
 For example, in the sentence “The bank is near the river,” the model needs to know not only what the token bank is, but also where it appears and how it relates to other tokens such as near and river.
 This contextual information helps the model understand that bank refers to a river bank rather than a financial institution.
-Absolute positional information tells the model the exact position of a token, while relative positional information describes how tokens are positioned in relation to one another.
+gAbsolute positional information tells the model the exact position of a token, while relative positional information describes how tokens are positioned in relation to one another.
 
+#Step by step
+1. Create the original embeddings using the data loader
+2. Look up the token embeddings
+3. Create a new layer of embeddings representing the positional embeddings
+4. Create the positions using torch.arrange
+5. Look up the positional embeddings
+6. Combine token and positional embeddings
 
