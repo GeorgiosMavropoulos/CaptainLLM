@@ -122,7 +122,7 @@ for i,x_i in enumerate(inputs):
    context_vec_2 += attn_weights_2[i]*x_i
    print(context_vec_2)
 """
-
+"""
 ##compute scores, the weigths and the context vector for all the given embeddings
 #use matrix multiplication to complete a fast computation
 
@@ -134,10 +134,51 @@ attn_weights = torch.softmax(attn_scores, dim=-1)#normalize along the last dimen
 ##now multiply the embeddings with the attention weigths to compute context vector
 context_vectors = attn_weights @ inputs
 print(context_vectors)
-
+"""
+"""
+##compute the attention mechanism with trainable weigths
+x_2 = inputs[1] #journey's embedding
+d_in = inputs.shape[1] #define the dimension input
+d_out = 2# define the dimension out
  
+#initialize 3 weight matrices Wq, Wk, Wv (weight query, weight key, weight value)
+torch.manual_seed(123)
+#create random parepemeters for each W
+W_query = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False) 
+W_key = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False)
+W_value = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False)
 
+##compute the query, k and value vectors
+query = x_2 @ W_query
+key = x_2 @ W_key
+value = x_2 @ W_value
 
+#print(query)
+##calculate key and values of all the inputs in order to be able to create the context vector of q2
+keys = inputs @ W_key
+values = inputs @ W_value
+
+#print("keys.shape:", keys.shape)
+#print("values.shape:", values.shape)
+
+#compute the attention scores for the word Journey
+keys_2 = keys[1]
+attn_score_22 = query.dot(key) ##find the dot product between query matrice and key
+#print(attn_score_22)
+
+##generilize the attention score
+attn_scores_2 = query @ keys.T
+#print(attn_scores_2)
+
+##calculate the attention weigths
+d_k = keys.shape[-1] ##calculate along the last key
+attn_weights_2 = torch.softmax(attn_scores_2 / d_k**0.5, dim=-1) ##implement the softmax algorithm and divide the generilized attention score by the key's columns and rows in the power of 0.5
+#print(attn_weights_2)
+
+#compute context vectors by multiplying attention weigths with the random created values
+context_vector = attn_weights_2 @ values
+print(context_vector)
+"""
 #call the main method
 main()
   ##test the embedding vectors
