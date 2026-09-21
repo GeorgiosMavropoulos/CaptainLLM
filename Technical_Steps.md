@@ -178,3 +178,49 @@ Normalizing the scores so that the weights sum to 1 makes the context vector a w
 embedded input tokens, x(i), with the corresponding attention weights and then summing
 the resulting vectors. A context vector is a list of numbers that captures the meaning of text based on its surrounding words
 
+
+## Attention Weights
+Trainable self-attention: each input embedding x is projected by three trainable weight matrices (W_q, W_k, W_v) into a query, a key and a value vector via matrix multiplication. 
+Here d_in = 3 and d_out = 2, so each projected vector has 2 elements. Keys and values are computed for all tokens, since they are all involved in computing the attention weights for the query. Note: "weight parameters" (the W matrices, learned during training) are not the same as "attention weights" (dynamic, context-specific values).
+The trainable weight matrices W_q, W_k and W_v are initialized with random values (fixed by a seed for reproducibility) and are optimized during training.
+
+In self-attention, we transform the input vectors in the input matrix X with the three weight
+matrices, Wq, Wk, and Wv. The new compute the attention weight matrix based on the resulting queries (Q) and
+keys (K). Using the attention weights and values (V), we then compute the context vectors (Z).
+
+# Steps to compute the context vector with trainable weigths
+1. Take the input embeddings
+2. Initialize the trainable weigths using nn.Linear to create W_Query/W_key/W_value with random values. The same three matrices are shared by all tokens.
+3. Calculate the dot product by multiplying inputs seperately with W_Query/W_key/W_value
+4. Calculate attention scores by multiplying the value of input @ W_key.T (transpose) with value of input @ W_key
+5. Normalize scores using softmax(attention_scores / keys.shape[-1]**0.5, dim=-1) to create the attention weigths
+6. Calculate the context vector by multiplying attention weigths @ value of input @W_value
+
+# Tips
+The reason for the normalization by the embedding dimension size is to improve the
+training performance by avoiding small gradients. For instance, when scaling up the
+embedding dimension, which is typically greater than 1,000 for GPT-like LLMs, large
+dot products can result in very small gradients during backpropagation due to the
+softmax function applied to them. 
+As dot products increase, the softmax function
+behaves more like a step function, resulting in gradients nearing zero. 
+These small gradients can drastically slow down learning or cause training to stagnate.
+The scaling by the square root of the embedding dimension is the reason why this
+self-attention mechanism is also called scaled-dot product attention.
+
+
+## Why query, key, and value?
+The terms “key,” “query,” and “value” in the context of attention mechanisms are
+borrowed from the domain of information retrieval and databases, where similar concepts
+are used to store, search, and retrieve information.
+A query is analogous to a search query in a database. It represents the current item
+(e.g., a word or token in a sentence) the model focuses on or tries to understand.
+The query is used to probe the other parts of the input sequence to determine how
+much attention to pay to them.
+The key is like a database key used for indexing and searching. In the attention mechanism,
+each item in the input sequence (e.g., each word in a sentence) has an associated
+key. These keys are used to match the query.
+The value in this context is similar to the value in a key-value pair in a database. It
+represents the actual content or representation of the input items. Once the model
+determines which keys (and thus which parts of the input) are most
+##
