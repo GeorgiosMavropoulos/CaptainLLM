@@ -31,6 +31,7 @@ def main():
 main()
    """
 import torch
+torch.manual_seed(123)
 ##test DataLoad from pytorch
 def main():
  #instanciate LoadData 
@@ -42,7 +43,7 @@ def main():
   return raw_text
 
  #load text
- initial_text = load_text()
+ initial_text = "Your journey starts with one step"
  vocab_size = 50257
  output_dim = 256
  token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim) #create the embedding layer
@@ -50,10 +51,11 @@ def main():
  # in order to prepare the test and train the model using the auto-regressive method.
  #For this example I will use a small batch_size
  dataloader =load_data_pytorch.create_dataloader_v1(initial_text,
-    batch_size=8,
+    batch_size=1,
     max_length=4,
     stride=4,
     shuffle=False)
+ 
  #use the iter which uses python's next function 
  # in order to iterate through the batches and fetch the next entry
  data_iter = iter(dataloader)
@@ -65,14 +67,75 @@ def main():
   #create the position embeddings that have the same embedding dimension as the token_embedding_layer
  pos_embedding_layer = torch.nn.Embedding(context_length, output_dim) ##create the embeddings and arrange each of embedding into one of the positions the algorithm below created
  pos_embeddings = pos_embedding_layer(torch.arange(context_length)) #create the number of weight's positions (4 in our case)
-
+ 
  #add the original embeddings into the the pos_embeddings in each of the 8 batches
  input_embeddings = token_embeddings + pos_embeddings
- print(input_embeddings.shape)
+"""
+ #calculate the scores
+ sample = input_embeddings[0]
+ query =  sample[1] # the second token input serves as a query
+ attn_scores_2 = torch.empty(sample.shape[0]) ###empty the inputs in order to get filled by the loop
+ for i, x_i in enumerate(sample):
+   attn_scores_2[i] = torch.dot(x_i, query)##calculate the dot product and add it into the array
+ #print(attn_scores_2) ## print computed attention scores
+
+   #normalize using softmax
+ attn_weights_2 = torch.softmax(attn_scores_2, dim=0)
+ #print("Attention weights:", attn_weights_2)
+ #print("Sum:", attn_weights_2.sum())
+
+ #calculate the context vector
+ query = sample[1]
+ context_vec_2 = torch.zeros(query.shape)
+ for i,x_i in enumerate(sample):
+   context_vec_2 += attn_weights_2[i]*x_i
+   #print(context_vec_2)
+"""
+
+"""book example"""
+inputs = torch.tensor(
+   [[0.43, 0.15, 0.89], # Your (x^1)
+   [0.55, 0.87, 0.66], # journey (x^2)
+   [0.57, 0.85, 0.64], # starts (x^3)
+   [0.22, 0.58, 0.33], # with (x^4)
+   [0.77, 0.25, 0.10], # one (x^5)
+   [0.05, 0.80, 0.55]] # step (x^6)
+   )
+
+"""
+##compute the scores
+query = inputs[1]
+attn_scores_2 = torch.empty(inputs.shape[0])
+for i, x_i in enumerate(inputs):
+   attn_scores_2[i] = torch.dot(x_i, query)
+#print(attn_scores_2) ##print scores
+
+#normalize the scores 
+attn_weights_2 = torch.softmax(attn_scores_2, dim=0)
+#print("Attention weights:", attn_weights_2)
+#print("Sum:", attn_weights_2.sum())
+
+###calculate the context vector for the 'Journey' query
+query = inputs[1]#the second input token is the query
+context_vec_2 = torch.zeros(query.shape) ##create an empty vector
+for i,x_i in enumerate(inputs):
+   context_vec_2 += attn_weights_2[i]*x_i
+   print(context_vec_2)
+"""
+
+##compute scores, the weigths and the context vector for all the given embeddings
+#use matrix multiplication to complete a fast computation
+
+attn_scores = inputs @ inputs.T
+#normalize using the softmax algorithm
+attn_weights = torch.softmax(attn_scores, dim=-1)#normalize along the last dimension
+
+
+##now multiply the embeddings with the attention weigths to compute context vector
+context_vectors = attn_weights @ inputs
+print(context_vectors)
+
  
- #print(pos_embeddings.shape)
- #print("Token IDs:\n", inputs)
- #print("\nInputs shape:\n", inputs.shape)
 
 
 #call the main method
@@ -81,7 +144,7 @@ main()
 #input_ids = torch.tensor([2, 3, 5, 1])
 #vocab_size = 50257
 #output_dim = 256
-#torch.manual_seed(123)
+
 
  
 

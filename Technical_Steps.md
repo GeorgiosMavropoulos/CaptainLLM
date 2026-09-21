@@ -143,3 +143,38 @@ gAbsolute positional information tells the model the exact position of a token, 
 5. Look up the positional embeddings
 6. Combine token and positional embeddings
 
+
+
+## Self attention mechanish
+The next step is to implement the self-attention mechanism. This mechanism allows the model to read a whole text in one shot in order not to forget the previous word
+There are a lot of variants of self-attentions mechanisms. The self-attention simple, the self-attention, the casual attention and the multi-head attention mechanism
+The self attention mechanism allows the model to to get selective access into different parts on the input. The attention weights provide an importance in each element of the sequence.
+The self-attention allows in each position of a sequence to watch all the other seats of the same sequence. For each token in the sequence a context vector is being computed, an enriched embedding which compines
+information from all the tokens in the input, weighted by the attention weights.It is a key component of the transformer architecture and of GPT models.
+
+## Description of self attention and scores
+In self-attention, the input text is first converted into a sequence of token embeddings, where each token is represented by a vector (for example, a 3-dimensional vector per word). 
+Then, each token is used in turn as the query and compared with every token in the sequence, including itself. 
+Each comparison is a dot product: the elements at the same position in the two vectors are multiplied, and the products are summed into a single number, called the attention score (ω). 
+For a sentence of T tokens, this gives T × T scores, one for every pair of tokens. Each score reflects how relevant one token is to another. Afterwards a new matrix, with attention scores is being created in order to create the context vector.
+ The scores are only the first intermediate step: they are later turned into attention weights, which are used to combine all input vectors into a context vector for each token, an enriched embedding that contains information from the whole sequence. This is usefull in order to understand the relation between words in a sentence.
+
+## Notice
+1. A higher attention score means the input token is more relevant to the query token.
+
+# Steps
+1. Create the embeddings with their position summed up
+2. Calculate the scores by finding the dot product of the embeddings
+### 
+To compute fast the scores we can use matrix multiplication
+attention_scores = inputs @ inputs.T
+Actually, we multiply the embeddings matrix with it's transpose
+###
+3. Normalize the scores using PyTorch.softmax() function
+####
+Normalizing the scores so that the weights sum to 1 makes the context vector a weighted average of the input vectors. This keeps its scale comparable to the inputs, keeps training stable, and lets each weight be read as the share of attention given to a token. In a few words, normalization normalize the sum of the weights into 1 in order to help the model realise the percentage of attention each token has. In the word journey, if the weight is 0.24 with sum 1, the model understands that it has the 24% of attention. Since the sum is stable, when an element takes more attention the other take less and the model figures out where to give more attention.
+####
+4. Calculate the context vector by multiplying the
+embedded input tokens, x(i), with the corresponding attention weights and then summing
+the resulting vectors. A context vector is a list of numbers that captures the meaning of text based on its surrounding words
+
