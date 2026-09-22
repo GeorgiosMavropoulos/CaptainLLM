@@ -45,7 +45,7 @@ def main():
   return raw_text
 
  #load text
- initial_text = "Your journey starts with one step"
+ initial_text = load_text()
  vocab_size = 50257
  output_dim = 256
  token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim) #create the embedding layer
@@ -73,20 +73,28 @@ def main():
  #add the original embeddings into the the pos_embeddings in each of the 8 batches
  input_embeddings = token_embeddings + pos_embeddings
 
-inputs = torch.tensor(
-   [[0.43, 0.15, 0.89], # Your (x^1)
-   [0.55, 0.87, 0.66], # journey (x^2)
-   [0.57, 0.85, 0.64], # starts (x^3)
-   [0.22, 0.58, 0.33], # with (x^4)
-   [0.77, 0.25, 0.10], # one (x^5)
-   [0.05, 0.80, 0.55]] # step (x^6)
-   )
+ inputs = torch.tensor(
+      [[0.43, 0.15, 0.89], # Your (x^1)
+      [0.55, 0.87, 0.66], # journey (x^2)
+      [0.57, 0.85, 0.64], # starts (x^3)
+      [0.22, 0.58, 0.33], # with (x^4)
+      [0.77, 0.25, 0.10], # one (x^5)
+      [0.05, 0.80, 0.55]] # step (x^6)
+      )
 
-d_in = 3
-d_out = 2
-torch.manual_seed(789)
-sa_v2 = attention_mechanism.SelfAttentionV1(d_in, d_out)
-print(sa_v2(inputs))
+ d_in = 3
+ d_out = 2
+ batch = torch.stack((inputs, inputs), dim=0)
+ 
+ torch.manual_seed(123)
+ context_length = batch.shape[1]
+ ca_v2 = attention_mechanism.CasualAttentionV1(d_in, d_out,context_length,0.0)
+ context_vecs = ca_v2 (batch)
+ print(context_vecs.shape)
+
+
+ 
+
 
 main()
   ##test the embedding vectors
