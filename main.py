@@ -1,39 +1,12 @@
 ##import tokenizer
 from tokenizer_bpe.__tokenizer import tokenizer
 from dataloader.windowslider import LoadData
-from self_attention  import attention_mechanism
-#main class
-"""
-def main():
+from multiheadattention import multiheadattention
 
-   #text example
-   text = (
-           "Akwirw ier"
-           )
-   #call tokenizer method
-   text_to_id = tokenizer.encoder(text)
 
-   ##print all id's
-   for i in text_to_id:
-      print(i)
-   for token in text_to_id:
-      print(tokenizer.decoder([token]))
-
-   #call the decoder method
-   id_to_string = tokenizer.decoder(text_to_id)
-
- 
-
-   #print results
-   #print(text_to_id)
-   print(id_to_string)
-
-#execute main
-main()
-   """
 import torch
-import torch.nn as nn
-torch.manual_seed(123)
+
+
 ##test DataLoad from pytorch
 def main():
  #instanciate LoadData 
@@ -83,14 +56,17 @@ def main():
       )
 
  d_in = 3
- d_out = 2
+ d_out = 1
  batch = torch.stack((inputs, inputs), dim=0)
  
  torch.manual_seed(123)
  context_length = batch.shape[1]
- ca_v2 = attention_mechanism.CasualAttentionV1(d_in, d_out,context_length,0.0)
- context_vecs = ca_v2 (batch)
+
+ #use multiheadattention class wraper and create two instances
+ mha = multiheadattention.MultiHeadAttentionWrapper(d_in, d_out, context_length, 0.0, num_heads=2)
+ context_vecs = mha(batch)
  print(context_vecs.shape)
+ print(context_vecs)
 
 
  

@@ -287,3 +287,8 @@ In code, we can achieve this by implementing a simple
 MultiHeadAttentionWrapper class that stacks multiple instances of our previously
 implemented CausalAttention module.
 
+# Steps
+1. Create a multihead wrapper class and create an instance of the casual attention class with nn.Module
+2. Create the forward method and conantenate the two context vectors
+3. From now on use the multihead wrapper class with an argument num_heads to define how many instances of the
+casual attention you want to create
