@@ -7,16 +7,17 @@ class SelfAttentionV1(nn.Module):
     def __init__(self,d_in,d_out,qkv_bias=False):
         ###initialize the trainable weight matrices for queries, keys, and values, each of them transforimg the input dimension (d_in) into an output dimension (d_out) 
         ##nn.linear is a better way to initialize with random values, since it has an optimized weight initialization scheme, contributing to more stable and effective model training.
+        super().__init__()
         self.W_query = nn.Linear(d_in, d_out, bias=qkv_bias)
         self.W_key = nn.Linear(d_in, d_out, bias=qkv_bias)
         self.W_value = nn.Linear(d_in, d_out, bias=qkv_bias)
 
     #create the method which computes the attention weigths
-    def compute_context_vector(self,x):
+    def forward(self,x):
         ##calculate the dot product of keys, values and the query
-        keys = x @ self.W_key
-        queries = x @ self.W_query
-        values = x @ self.W_value
+        keys = self.W_key(x)
+        queries = self.W_query(x)
+        values = self.W_value(x)
 
         #calculate the attention scores
         attention_scores = queries @ keys.T

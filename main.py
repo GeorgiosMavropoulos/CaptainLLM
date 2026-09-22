@@ -1,6 +1,7 @@
 ##import tokenizer
 from tokenizer_bpe.__tokenizer import tokenizer
 from dataloader.windowslider import LoadData
+from self_attention  import attention_mechanism
 #main class
 """
 def main():
@@ -31,6 +32,7 @@ def main():
 main()
    """
 import torch
+import torch.nn as nn
 torch.manual_seed(123)
 ##test DataLoad from pytorch
 def main():
@@ -70,29 +72,7 @@ def main():
  
  #add the original embeddings into the the pos_embeddings in each of the 8 batches
  input_embeddings = token_embeddings + pos_embeddings
-"""
- #calculate the scores
- sample = input_embeddings[0]
- query =  sample[1] # the second token input serves as a query
- attn_scores_2 = torch.empty(sample.shape[0]) ###empty the inputs in order to get filled by the loop
- for i, x_i in enumerate(sample):
-   attn_scores_2[i] = torch.dot(x_i, query)##calculate the dot product and add it into the array
- #print(attn_scores_2) ## print computed attention scores
 
-   #normalize using softmax
- attn_weights_2 = torch.softmax(attn_scores_2, dim=0)
- #print("Attention weights:", attn_weights_2)
- #print("Sum:", attn_weights_2.sum())
-
- #calculate the context vector
- query = sample[1]
- context_vec_2 = torch.zeros(query.shape)
- for i,x_i in enumerate(sample):
-   context_vec_2 += attn_weights_2[i]*x_i
-   #print(context_vec_2)
-"""
-
-"""book example"""
 inputs = torch.tensor(
    [[0.43, 0.15, 0.89], # Your (x^1)
    [0.55, 0.87, 0.66], # journey (x^2)
@@ -102,84 +82,12 @@ inputs = torch.tensor(
    [0.05, 0.80, 0.55]] # step (x^6)
    )
 
-"""
-##compute the scores
-query = inputs[1]
-attn_scores_2 = torch.empty(inputs.shape[0])
-for i, x_i in enumerate(inputs):
-   attn_scores_2[i] = torch.dot(x_i, query)
-#print(attn_scores_2) ##print scores
+d_in = 3
+d_out = 2
+torch.manual_seed(789)
+sa_v2 = attention_mechanism.SelfAttentionV1(d_in, d_out)
+print(sa_v2(inputs))
 
-#normalize the scores 
-attn_weights_2 = torch.softmax(attn_scores_2, dim=0)
-#print("Attention weights:", attn_weights_2)
-#print("Sum:", attn_weights_2.sum())
-
-###calculate the context vector for the 'Journey' query
-query = inputs[1]#the second input token is the query
-context_vec_2 = torch.zeros(query.shape) ##create an empty vector
-for i,x_i in enumerate(inputs):
-   context_vec_2 += attn_weights_2[i]*x_i
-   print(context_vec_2)
-"""
-"""
-##compute scores, the weigths and the context vector for all the given embeddings
-#use matrix multiplication to complete a fast computation
-
-attn_scores = inputs @ inputs.T
-#normalize using the softmax algorithm
-attn_weights = torch.softmax(attn_scores, dim=-1)#normalize along the last dimension
-
-
-##now multiply the embeddings with the attention weigths to compute context vector
-context_vectors = attn_weights @ inputs
-print(context_vectors)
-"""
-"""
-##compute the attention mechanism with trainable weigths
-x_2 = inputs[1] #journey's embedding
-d_in = inputs.shape[1] #define the dimension input
-d_out = 2# define the dimension out
- 
-#initialize 3 weight matrices Wq, Wk, Wv (weight query, weight key, weight value)
-torch.manual_seed(123)
-#create random parepemeters for each W
-W_query = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False) 
-W_key = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False)
-W_value = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False)
-
-##compute the query, k and value vectors
-query = x_2 @ W_query
-key = x_2 @ W_key
-value = x_2 @ W_value
-
-#print(query)
-##calculate key and values of all the inputs in order to be able to create the context vector of q2
-keys = inputs @ W_key
-values = inputs @ W_value
-
-#print("keys.shape:", keys.shape)
-#print("values.shape:", values.shape)
-
-#compute the attention scores for the word Journey
-keys_2 = keys[1]
-attn_score_22 = query.dot(key) ##find the dot product between query matrice and key
-#print(attn_score_22)
-
-##generilize the attention score
-attn_scores_2 = query @ keys.T
-#print(attn_scores_2)
-
-##calculate the attention weigths
-d_k = keys.shape[-1] ##calculate along the last key
-attn_weights_2 = torch.softmax(attn_scores_2 / d_k**0.5, dim=-1) ##implement the softmax algorithm and divide the generilized attention score by the key's columns and rows in the power of 0.5
-#print(attn_weights_2)
-
-#compute context vectors by multiplying attention weigths with the random created values
-context_vector = attn_weights_2 @ values
-print(context_vector)
-"""
-#call the main method
 main()
   ##test the embedding vectors
 #input_ids = torch.tensor([2, 3, 5, 1])
@@ -187,5 +95,5 @@ main()
 #output_dim = 256
 
 
- 
+
 
