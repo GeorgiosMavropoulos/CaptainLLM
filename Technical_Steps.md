@@ -224,3 +224,66 @@ The value in this context is similar to the value in a key-value pair in a datab
 represents the actual content or representation of the input items. Once the model
 determines which keys (and thus which parts of the input) are most
 ##
+
+
+
+## Casual attention
+## Casual attention is an attention mechanism which hides the future words in order for the model to consider only the previous words which appear before the current position. It restricts a model to only consider previous and current inputs in a sequence when processing any given token when computing attention scores
+## To achieve this we code an attention mechanism which masks the tokens after the current input normalize the nonmasked attention weights such that the attention weights sum to 1 in each row. This is essential since the model will get frustrated by having access the future words.
+## Example
+input 1 : Your [1.0] masked[2.0] masked[3.0] 
+input 2: Journey Your [1.0] [2.0] masked[3.0]
+input 3: Starts Your [1.0] [2.0] [3.0]
+## Tip
+One way to obtain the masked attention weight matrix in causal attention is to apply the
+softmax function to the attention scores, zeroing out the elements above the diagonal and normalizing
+the resulting matrix.
+
+## Tip
+Information leakage
+When we apply a mask and then renormalize the attention weights, it might initially
+appear that information from future tokens (which we intend to mask) could still influence
+the current token because their values are part of the softmax calculation. 
+
+However, the key insight is that when we renormalize the attention weights after masking,
+what we’re essentially doing is recalculating the softmax over a smaller subset (since masked positions don’t contribute to the softmax value).
+
+The mathematical elegance of softmax is that despite initially including all positions
+in the denominator, after masking and renormalizing, the effect of the masked positions
+is nullified—they don’t contribute to the softmax score in any meaningful way.
+
+In simpler terms, after masking and renormalization, the distribution of attention
+weights is as if it was calculated only among the unmasked positions to begin with.
+This ensures there’s no information leakage from future (or otherwise masked)
+tokens as we intended.
+
+
+# Tip
+A more efficient way to obtain the masked attention weight matrix in
+causal attention is to mask the attention scores with negative infinity values before
+applying the softmax function.
+
+## Tip
+In order to avoid overfitting through training a deep learning method is Dropout.
+By using dropout the trainer drops some random elements to zero, in order for the model not to get a biased training. This method helps prevent overfitting by ensuring that a model does not become overly reliant on any specific set of hidden layer units. It’s important to emphasize that dropout is only used
+during training and is disabled afterward.
+
+## Steps
+1. Update SelfAttention class to casual attention and add a buffer
+buffers are automatically moved to the appropriate device (CPU or GPU) along with our model, which will
+be relevant when training our LLM. This means we don’t need to manually ensure
+these tensors are on the same device as your model parameters, avoiding device mismatch errors.
+2. Update forward method in order to implement the casual attention with a mask
+
+## Multihead attention mechanism
+In practical terms, implementing multi-head attention involves creating multiple
+instances of the self-attention mechanism, each with its own weights,
+and then combining their outputs. 
+Using multiple instances of the self-attention
+mechanism can be computationally intensive, but it’s crucial for the kind of complex
+pattern recognition that models like transformer-based LLMs are known for.
+The main idea is to run the attention mechanism multiple times in paraller with different linear projects - the results of multiplying  the input data (like the key, query and values) by a weight matrix. 
+In code, we can achieve this by implementing a simple
+MultiHeadAttentionWrapper class that stacks multiple instances of our previously
+implemented CausalAttention module.
+
