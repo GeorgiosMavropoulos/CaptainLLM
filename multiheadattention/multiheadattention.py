@@ -1,5 +1,5 @@
 ###IMPLEMENT THE MULTIHEAD ATTENTION CLASS WHICH CREATES MULTIPLE INSTANCES OF THE CASUAL ATTENTION CLASS
-from self_attention import attention_mechanism
+
 import torch.nn as nn
 import torch
 
