@@ -1,16 +1,15 @@
 ##import tokenizer
 
-from dataloader.windowslider import LoadData
-from multiheadattention import multiheadattention
-from embeddings.embeddings import Embeddings
 
+
+from gptmodel.gpt_model import GPTModel 
+from gptmodel.config import GPT_CONFIG_124M as cfg
 import torch
-
 
 ##test DataLoad from pytorch
 def main():
 
-
+ """
  #instanciate LoadData 
  load_data_pytorch = LoadData()
 
@@ -56,7 +55,27 @@ def main():
 
   #call the apply_multihead_attention_mechanism() to create the context vector
  print(apply_multihead_attention_mechanism())
+  """
 
+ ##test the gptmodel class
+ #use the tokenizer to tokenize 2 texts
+ import tiktoken as tk
+ batch = []
+ txt1 = "Every effort moves you"
+ txt2 = "Every day holds a"
+ 
+ ##apply the encoding
+ tokenizer = tk.get_encoding("gpt2")
+ batch.append(torch.tensor(tokenizer.encode(txt1)))
+ batch.append(torch.tensor(tokenizer.encode(txt2)))
+ batch = torch.stack(batch, dim=0) #concatenate the tensors into a bigger one with dim 0
+ #print(batch)
+ #create the embeddings and the context vector using the gpt model
+ torch.manual_seed(123)
+ model = GPTModel(cfg)
+ logits = model(batch)
+ print("Output shape:", logits.shape)
+ print(logits)
 
 
 main()

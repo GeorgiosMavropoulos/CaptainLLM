@@ -321,3 +321,74 @@ causal attention, which is called multi-head attention.
 causal attention modules.
  A more efficient way of creating multi-head attention modules involves batched
 matrix multiplications.
+
+
+## Multi-Head Attention with Weight Splits — Summary
+
+* **Self-attention** transforms each input token into a richer **context vector** by incorporating information from other tokens in the sequence.
+
+* A context vector is computed as a **weighted sum of the input representations**, where the weights determine how much attention each token receives.
+
+* In self-attention, **attention weights** can be obtained from the similarity between **queries and keys**, using dot products.
+
+* A **dot product** multiplies corresponding elements of two vectors and then sums the results, providing a measure of their similarity.
+
+* **Matrix multiplication** allows these operations to be performed efficiently in parallel, replacing explicit nested loops with compact tensor operations.
+
+* In LLMs, self-attention is implemented as **scaled dot-product attention**, where trainable weight matrices transform the input embeddings into:
+
+  * **Queries (Q)** — what each token is looking for.
+  * **Keys (K)** — what each token offers for matching.
+  * **Values (V)** — the information that is aggregated.
+
+* For autoregressive language models, a **causal attention mask** prevents each token from attending to future tokens, ensuring that predictions only depend on previous and current tokens.
+
+* **Dropout** can be applied to the attention weights during training to reduce overfitting and improve generalization.
+
+* **Multi-head attention** combines multiple attention heads, allowing the model to learn different types of relationships between tokens simultaneously.
+
+* A straightforward implementation creates multiple independent attention modules and concatenates their outputs.
+
+* A more efficient implementation performs the computations for all attention heads **in parallel using batched matrix multiplications**, typically by splitting the projected Q, K, and V representations into multiple heads.
+
+### Key Idea
+
+Instead of processing each attention head separately:
+
+```text
+Head 1 → Attention
+Head 2 → Attention
+Head 3 → Attention
+...
+```
+
+we organize the tensors so that all heads can be processed simultaneously:
+
+```text
+Input Embeddings
+       ↓
+   Q, K, V
+       ↓
+   Split into heads
+       ↓
+Batched Matrix Multiplication
+       ↓
+Attention for all heads
+       ↓
+Concatenate heads
+       ↓
+Output Projection
+       ↓
+Context Representations
+```
+
+The main advantage is **computational efficiency**: the mathematical operation remains the same, but modern hardware can process the attention heads in parallel.
+
+
+
+
+## Transformer blocks and layer normalization
+The GPTModel class defines the full architecture of a GPT-style language model: it converts input token IDs into token embeddings via tok_emb, adds positional embeddings via pos_emb so the model knows the order of tokens, applies dropout for regularization, and passes the result through a stack of transformer blocks (trf_blocks)
+After the transformer blocks, a Normalization layer is applied to stabilize the activations by rescaling them to have zero mean and unit variance (using two learnable parameters, scale and shift, so the network can adjust this normalization during training), before a final linear layer (out_head) projects the normalized embeddings into logits — one raw, unnormalized score per vocabulary token, for each position in the sequence — which represent the model's unnormalized predictions for the next token and would later be converted into probabilities via a softmax function.
+
+
