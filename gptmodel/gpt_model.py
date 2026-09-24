@@ -50,6 +50,23 @@ class LayerNormalization(nn.Module):
         super().__init__()
         # eps is a small constant (epsilon) added in order to prevent division by zero during the normalization
         self.eps = 1e-5
+
+
+        # The scale and shift parameters let the model partially undo the strict
+        # normalization when that helps it learn. Forcing every layer's output to
+        # have mean=0 and variance=1 keeps training stable, but it can be overly
+        # restrictive: some dimensions might benefit from a different variance or
+        # from not being centered at 0. Because scale and shift are nn.Parameter,
+        # PyTorch registers them as trainable weights, so they participate in
+        # backpropagation and get updated by the optimizer during training, letting
+        # the model learn the best scale/shift per embedding dimension directly
+        # from the data. They start at ones and zeros so that, at the very
+        # beginning of training, scale * norm_x + shift == norm_x -- i.e. the layer
+        # starts out as pure normalization with no extra effect. As training
+        # proceeds, the optimizer only moves them away from 1/0 if doing so
+        # actually reduces the training loss, so any adjustment is learned, not
+        # hand-set, and only happens where it genuinely helps performance.
+
         # scale and shift are two trainable parameters of the same dimension as the input
         # so the model automatically adjusts during training to improve performance on its training task.
         # This allows the model to learn appropriate scaling and shifting that best suit the data it is processing.
