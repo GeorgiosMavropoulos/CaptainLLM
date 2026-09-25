@@ -2,7 +2,7 @@
 
 
 
-from gptmodel.gpt_model import GPTModel 
+from gptmodel.gpt_model import GPTModel,LayerNormalization 
 from gptmodel.config import GPT_CONFIG_124M as cfg
 import torch
 
@@ -74,9 +74,24 @@ def main():
  torch.manual_seed(123)
  model = GPTModel(cfg)
  logits = model(batch)
- print("Output shape:", logits.shape)
- print(logits)
+ #print("Output shape:", logits.shape)
+ #print(logits)
 
+ import torch.nn as nn
+ torch.manual_seed(123)
+ batch_example = torch.randn(2, 5)
+ layer = nn.Sequential(nn.Linear(5, 6), nn.ReLU())
+ out = layer(batch_example)
+ print(out)
+ torch.set_printoptions(sci_mode=False)
+ 
+
+ ln = LayerNormalization(emb_dim=5)
+ out_ln = ln(batch_example)
+ mean = out_ln.mean(dim=-1, keepdim=True)
+ var = out_ln.var(dim=-1, unbiased=False, keepdim=True)
+ print("Mean:\n", mean)
+ print("Variance:\n", var)
 
 main()
 
