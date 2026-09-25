@@ -119,3 +119,33 @@ class FeedForward(nn.Module):
 
     def forward(self, x): ##pass data through the neural network
         return self.layers(x)
+
+
+
+#mocked deep neural network
+class MockedDeepNeuralNetwork(nn.Module):
+   def __init__(self, layer_sizes, use_shortcut):
+      super().__init__()
+      self.use_shortcut = use_shortcut
+      ##implement 5 layers with GELU activation
+      self.layers = nn.ModuleList([nn.Sequential(nn.Linear(layer_sizes[0], layer_sizes[1]),
+GELU()),
+nn.Sequential(nn.Linear(layer_sizes[1], layer_sizes[2]),
+GELU()),
+nn.Sequential(nn.Linear(layer_sizes[2], layer_sizes[3]),
+GELU()),
+nn.Sequential(nn.Linear(layer_sizes[3], layer_sizes[4]),
+GELU()),
+nn.Sequential(nn.Linear(layer_sizes[4], layer_sizes[5]),
+GELU())])
+
+   #forward the data into the neurla network blocks
+   def forward(self, x):
+      for layer in self.layers:
+        layer_output = layer(x) #compute the output of the current layer
+        ##if a shortcut is being used add the current' layer's embeddings into the output
+        if self.use_shortcut and x.shape == layer_output.shape:
+         x = x + layer_output
+        else:
+            x = layer_output
+      return x

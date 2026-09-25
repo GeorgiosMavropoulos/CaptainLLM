@@ -2,9 +2,10 @@
 
 
 
-from gptmodel.gpt_model import GPTModel,LayerNormalization,FeedForward
+from gptmodel.gpt_model import GPTModel,LayerNormalization,FeedForward, MockedDeepNeuralNetwork
 from gptmodel.config import GPT_CONFIG_124M as cfg
 import torch
+import torch.nn as nn
 
 ##test DataLoad from pytorch
 def main():
@@ -93,13 +94,48 @@ def main():
  var = out_ln.var(dim=-1, unbiased=False, keepdim=True)
  print("Mean:\n", mean)
  print("Variance:\n", var)
- """
+ 
 
  ##test feedforward
  ffn = FeedForward(cfg)
  x = torch.rand(2, 3, 768)#create 2 samples with batch dimension 2
  out = ffn(x)
  print(out.shape)
+ """
+
+ ##test the mocked neural deep network
+ layer_sizes = [3, 3, 3, 3, 3, 1] ## add some random layer sizes
+ sample_input = torch.tensor([[1., 0., -1.]])
+ torch.manual_seed(123)
+ model_without_shortcut = MockedDeepNeuralNetwork(
+ layer_sizes, use_shortcut=False
+ )
+
+ ##implement a function that compute the gradients in the model's backward pass
+ def print_gradients(model, x):
+  output = model(x)
+  target = torch.tensor([[0.]]) #set target as 0 for simplicity
+  loss = nn.MSELoss() ##calculate loss based on  how close the target and output are
+  loss = loss(output, target)
+  loss.backward() #backwrd pass to calculate the gradient
+
+  for name, param in model.named_parameters():
+   if 'weight' in name:
+    print(f"{name} has gradient mean of {param.grad.abs().mean().item()}")
+
+
+
+
+ #implement a model with skip connections (conenction short cuts)
+ torch.manual_seed(123)
+ model_with_shortcut = MockedDeepNeuralNetwork(
+ layer_sizes, use_shortcut=True
+   )
+
+ print_gradients(model_without_shortcut, sample_input)
+ print("#####################################################################")
+ print_gradients(model_with_shortcut, sample_input)
+ 
 
 main()
 
