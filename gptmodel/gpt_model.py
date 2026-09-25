@@ -53,8 +53,8 @@ class LayerNormalization(nn.Module):
 
 
         # The scale and shift parameters let the model partially undo the strict
-        # normalization when that helps it learn. Forcing every layer's output to
-        # have mean=0 and variance=1 keeps training stable, but it can be overly
+        # normalization when that helps it learn. 
+        # Forcing every layer's output to # have mean=0 and variance=1 keeps training stable, but it can be overly
         # restrictive: some dimensions might benefit from a different variance or
         # from not being centered at 0. Because scale and shift are nn.Parameter,
         # PyTorch registers them as trainable weights, so they participate in
@@ -83,3 +83,24 @@ class LayerNormalization(nn.Module):
         var = x.var(dim=-1, keepdim=True, unbiased=False)
         norm_x = (x - mean) / torch.sqrt(var + self.eps)  # find the norm
         return self.scale * norm_x + self.shift
+
+
+
+
+#implement the GELU activation
+##In contrast with RELU, GELU function allow some minor negative values to pass in order create a smooth curve around Zero
+# After the input pass through the normalization layer it passes also from this function so as the network gets a non-linearity.
+#This helps the model learn more efficiently difficult language patterns
+class GELU(nn.Module):
+    def __init__(self):
+     super().__init__()
+
+    def forward(self, x): #
+      # 1. x + 0.044715 * x^3: Cubic correction term used for the tanh approximation.
+      # 2. torch.sqrt(2.0 / pi): Scaling factor (~0.79788) derived from the normal distribution.
+      # 3. torch.tanh(...): Smoothly maps the scaled values between -1 and 1.
+      # 4. 0.5 * x * (1 + tanh(...)): Final smooth activation gating mechanism.
+     return 0.5 * x * (1 + torch.tanh(
+     torch.sqrt(torch.tensor(2.0 / torch.pi)) *
+     (x + 0.044715 * torch.pow(x, 3))
+     ))
