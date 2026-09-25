@@ -83,7 +83,7 @@ def main():
  layer = nn.Sequential(nn.Linear(5, 6), nn.ReLU())
  out = layer(batch_example)
  print(out)
- torch.set_printoptions(sci_mode=False)
+ torch.set_printoptions(sci_mode=False,precision=20)
  
 
  ln = LayerNormalization(emb_dim=5)
