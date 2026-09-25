@@ -392,3 +392,49 @@ The GPTModel class defines the full architecture of a GPT-style language model: 
 After the transformer blocks, a Normalization layer is applied to stabilize the activations by rescaling them to have zero mean and unit variance (using two learnable parameters, scale and shift, so the network can adjust this normalization during training), before a final linear layer (out_head) projects the normalized embeddings into logits — one raw, unnormalized score per vocabulary token, for each position in the sequence — which represent the model's unnormalized predictions for the next token and would later be converted into probabilities via a softmax function.
 
 
+
+### Τhe Architectural Pieces of a Transformer
+### When you combine LAYER NORMALIZATION, GELU,  Feed-Forward Network, SHORTCUT CONNECTION and a loss function you are looking at the core machinery of a Transformers Block (GPT AND LLAMA)
+
+Here is a clear, high-level summary of what each component does and why it matters
+
+1. Layer Normalization: It works as the stabilizer. It rescales the embedding values for each individual word in order not to become very
+large or very small. 
+The maths behind it: It forces the features to have a mean of 0 and variance of 1. 
+Importance: It's crucial because it prevents the  neural network from crashing or stalling during training due to extreme values.
+
+
+2. GELU Activation: The GATEKEEPER: A smooth valve that decides which numbers are important enough to pass them through the next layer.
+The maths behind it: It multiplies the input in a propability curve based on the normal distribution.
+Importance: Introduces non-linearity [1,1]. Without it a deep network is just a giant linear equation which cannot learn difficult patterns
+
+3. FEED-FORWARD-NETOWRK (FFN): The ENGINE: A small network inside the block which gets a word's vector, expands it to a massive size
+and shrinks it to analyze it, and shrinks it back down.
+The maths behind it:  Projects Dimensions up (e.g. 758 dimensions multiplied by 4,e.g., 768 → 3072). Applies GELU ACTIVATION, 
+and projects them back down (3072->768)
+Importance: It's crucial because it gives the A.I the necessary thinking space or memory capacity to combine features and learn complex contepts
+
+4. Shortcut Connection: The HIGHWAY. A bypass lane that allows the original input data to skip a layer and add itself directly to the output.
+The maths behind it: Adds the input X into the layer's output: output = X+layer(x)
+Importance: Solves the GRADIENT VANISHING PROBLEM. It passes signals directly backward during training
+
+5. Loss Function: The SCOREKEEPER. A mathematical ruler which calculates how far is the AI's current guess from the real target
+The maths behind it: Calculates error (like MSE for numerical differences, or Cross-Entropy for word predictions).
+
+The combination of flow data
+```
+[ Input Tensor x ]
+       │
+       ├───► (Highway Bypass Lane) ──────────────────────────────────┐
+       ▼                                                             │
+[ Layer Normalization ]  ──► Stabilizes numbers (Mean=0, Var=1)      │
+       ▼                                                             │
+[ Feed-Forward Network ] ──► Linear Up ──► [ GELU ] ──► Linear Down  │
+       ▼                                                             │
+[ Output of Layer ]                                                  │
+       ▼                                                             │
+[ Shortcut Connection ]  ◄── (Add the original x back in) ◄──────────┘
+       ▼
+[ Final Prediction ] ────► Compare with Target via [ Loss Function ] ──► Compute Gradients
+```
+
