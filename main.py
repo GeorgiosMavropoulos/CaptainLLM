@@ -2,7 +2,7 @@
 
 
 
-from gptmodel.gpt_model import GPTModel,LayerNormalization 
+from gptmodel.gpt_model import GPTModel,LayerNormalization,FeedForward
 from gptmodel.config import GPT_CONFIG_124M as cfg
 import torch
 
@@ -55,7 +55,7 @@ def main():
 
   #call the apply_multihead_attention_mechanism() to create the context vector
  print(apply_multihead_attention_mechanism())
-  """
+  
 
  ##test the gptmodel class
  #use the tokenizer to tokenize 2 texts
@@ -76,7 +76,8 @@ def main():
  logits = model(batch)
  #print("Output shape:", logits.shape)
  #print(logits)
-
+ 
+ 
  import torch.nn as nn
  torch.manual_seed(123)
  batch_example = torch.randn(2, 5)
@@ -92,6 +93,13 @@ def main():
  var = out_ln.var(dim=-1, unbiased=False, keepdim=True)
  print("Mean:\n", mean)
  print("Variance:\n", var)
+ """
+
+ ##test feedforward
+ ffn = FeedForward(cfg)
+ x = torch.rand(2, 3, 768)#create 2 samples with batch dimension 2
+ out = ffn(x)
+ print(out.shape)
 
 main()
 

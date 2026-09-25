@@ -104,3 +104,18 @@ class GELU(nn.Module):
      torch.sqrt(torch.tensor(2.0 / torch.pi)) *
      (x + 0.044715 * torch.pow(x, 3))
      ))
+
+
+##feed forward function
+class FeedForward(nn.Module):
+    def __init__(self, cfg):
+     super().__init__()
+    ##create 2 linear layers and use a GELU function
+     self.layers = nn.Sequential(
+        nn.Linear(cfg["emb_dim"], 4 * cfg["emb_dim"]),
+        GELU(),
+        nn.Linear(4 * cfg["emb_dim"], cfg["emb_dim"]),
+        )
+
+    def forward(self, x): ##pass data through the neural network
+        return self.layers(x)
