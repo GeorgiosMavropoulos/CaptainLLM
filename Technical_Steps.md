@@ -438,3 +438,15 @@ The combination of flow data
 [ Final Prediction ] ────► Compare with Target via [ Loss Function ] ──► Compute Gradients
 ```
 
+### Transformers block
+Finally the transformer block encapsulates the Multiheadattention mechanism, the layer normalization mechanism and the FeedForward network we implemented later. The transformer's block task is to:
+1. Take the input (embeddings + positional embeddings)
+2. Apply the layer normalization we implemented and discussed previously
+3. Apply the multi head attention so each token receive information from the previous ones
+4. Dropout some weigths in order to avoid overfitting
+5. Add the initial X's data into the output value of the attention mechanism
+6. Re-apply the layer normalization into the created embeddings
+7. Apply the FeedForward mechanism, LayerNorm -> GELU ACTIVATION - Layer Normalization
+8. Dropout randomly some weigths and add the FeedForarward's input into the original X
+9. Return the output X ready for the next transformers block
+

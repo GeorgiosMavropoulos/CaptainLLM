@@ -43,7 +43,7 @@ class TransformerBlock(nn.Module):
         ##initialize the attention mechanism
         self.attention = MultiHeadAttention(
            #initialize the input dimension
-           d_in = cfg["emb_in"],
+           d_in = cfg["emb_dim"],
            #initialize the output dimension
            d_out=cfg["emb_dim"],
            #initialize context_lenght
@@ -52,16 +52,16 @@ class TransformerBlock(nn.Module):
            num_heads= cfg["n_heads"],
            #initialize the dropout variable
            dropout= cfg["drop_rate"],
-           qkv_bias= cfg["qkv_bias"]
+           qkv_bias= cfg["qkv_bias"])
            #initialize a variable and delegate fastforward method
-           self.ff = FeedForward(cfg)
-           #initialize a variable and delegate the normalization layer method
-           self.norm1 = LayerNormalization(cfg["emd_in"])
-           #initialize a second normalization layer
-           self.norm2 = LayerNorm(cfg["emb_dim"])
-           #initialize another drop out variable to implement dropout during shortcut connections
-           self.drop_shortcut = nn.Dropout(cfg["drop_rate"])
-        )
+        self.ff = FeedForward(cfg)
+        #initialize a variable and delegate the normalization layer method
+        self.norm1 = LayerNormalization(cfg["emb_dim"])
+        #initialize a second normalization layer
+        self.norm2 = LayerNormalization(cfg["emb_dim"])
+        #initialize another drop out variable to implement dropout during shortcut connections
+        self.drop_shortcut = nn.Dropout(cfg["drop_rate"])
+        
 
      #implement the forward method to forward the data through the network
     def forward(self, x):  ## this block just returns its input
@@ -77,7 +77,7 @@ class TransformerBlock(nn.Module):
 
         shortcut = x ##shortcut for the feedforward network block
         ##apply the second layer of normalization
-        x = self.norm(2)
+        x = self.norm2(x)
         ##apply the feedforward network mechanism
         x= self.ff(x)
         #dropout some random weigths
