@@ -1,7 +1,7 @@
 #### Implement the GPT model's architecture
 import torch
 import torch.nn as nn
-
+from multiheadattention.multiheadattention import MultiHeadAttention
 
 class GPTModel(nn.Module):
     ## initialize the constructor
@@ -15,7 +15,7 @@ class GPTModel(nn.Module):
         self.drop_embs = nn.Dropout(cfg["drop_rate"])
         # use a placeholder for transformer blocks
         self.trf_blocks = nn.Sequential(
-            *[DummyTransformerBlock(cfg) for _ in range(cfg["n_layers"])]
+            *[TransformerBlock(cfg) for _ in range(cfg["n_layers"])]
         )
         # use the real LayerNormalization class for the final norm
         self.final_norm = LayerNormalization(cfg["emb_dim"])
@@ -36,12 +36,56 @@ class GPTModel(nn.Module):
 
 
 ## create the (placeholder) transformer block
-class DummyTransformerBlock(nn.Module):
+class TransformerBlock(nn.Module):
     def __init__(self, cfg):
         super().__init__()
 
+        ##initialize the attention mechanism
+        self.attention = MultiHeadAttention(
+           #initialize the input dimension
+           d_in = cfg["emb_in"],
+           #initialize the output dimension
+           d_out=cfg["emb_dim"],
+           #initialize context_lenght
+           context_length=cfg["context_length"],
+           #initialize heads number variable
+           num_heads= cfg["n_heads"],
+           #initialize the dropout variable
+           dropout= cfg["drop_rate"],
+           qkv_bias= cfg["qkv_bias"]
+           #initialize a variable and delegate fastforward method
+           self.ff = FeedForward(cfg)
+           #initialize a variable and delegate the normalization layer method
+           self.norm1 = LayerNormalization(cfg["emd_in"])
+           #initialize a second normalization layer
+           self.norm2 = LayerNorm(cfg["emb_dim"])
+           #initialize another drop out variable to implement dropout during shortcut connections
+           self.drop_shortcut = nn.Dropout(cfg["drop_rate"])
+        )
+
+     #implement the forward method to forward the data through the network
     def forward(self, x):  ## this block just returns its input
-        return x
+        shortcut = x #shortcut connection for attention block
+        ##apply layer normalization into the data
+        x = self.norm1(x)
+        #apply the multihead masked attention mechanism to the embeddings
+        x = self.attention(x)
+        ##dropout some data
+        x = self.drop_shortcut(x)
+        ##add the previous output data into the next's input data
+        x = x + shortcut
+
+        shortcut = x ##shortcut for the feedforward network block
+        ##apply the second layer of normalization
+        x = self.norm(2)
+        ##apply the feedforward network mechanism
+        x= self.ff(x)
+        #dropout some random weigths
+        x = self.drop_shortcut(x)
+         ##add the previous output data into the next's input data
+        x = x + shortcut
+        return x# return the final context vector
+        
 
 
 ## create the final layer normalization
