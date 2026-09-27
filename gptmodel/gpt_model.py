@@ -13,7 +13,9 @@ class GPTModel(nn.Module):
         self.pos_emb = nn.Embedding(cfg["context_length"], cfg["emb_dim"])
         ## add dropout rate
         self.drop_embs = nn.Dropout(cfg["drop_rate"])
-        # use a placeholder for transformer blocks
+        # create a sequencial stack of transformers block. the sequence number
+        #is being defined by n_layers (12 for this implementation). This means the
+        #transformers block will be looped 12 times
         self.trf_blocks = nn.Sequential(
             *[TransformerBlock(cfg) for _ in range(cfg["n_layers"])]
         )
@@ -23,7 +25,8 @@ class GPTModel(nn.Module):
 
     ## set up the forward function to designate the path the data follow in the neural network
     def forward(self, in_idx):
-        batch_size, seq_len = in_idx.shape  ## designate batch size by input's shape
+        #take a batch of input token indices
+        batch_size, seq_len = in_idx.shape  
         tok_embeds = self.tok_emb(in_idx)  ## compute token embeddings
         # compute positional embeddings
         pos_embeds = self.pos_emb(torch.arange(seq_len, device=in_idx.device))

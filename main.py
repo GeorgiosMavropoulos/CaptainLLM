@@ -1,5 +1,5 @@
 
-from gptmodel.gpt_model import GPTModel,LayerNormalization,FeedForward, MockedDeepNeuralNetwork
+from gptmodel.gpt_model import GPTModel
 from gptmodel.config import GPT_CONFIG_124M as cfg
 import torch
 from gptmodel.gpt_model import  TransformerBlock
@@ -8,15 +8,33 @@ from gptmodel.gpt_model import  TransformerBlock
 def main():
 
 
- ##test the transformers block
+ ##test the gpt model
  torch.manual_seed(123)
- x = torch.rand(2, 4, 768) #create a sample input shape (batch_size, num_tokens, emb_dim)
- #define the transformers block
- block = TransformerBlock(cfg)
- output = block(x)
+ batch = torch.randint(
+    0,
+    cfg["vocab_size"],
+    (2, 4)
+)
+ model = GPTModel(cfg) #instanciate a model using the gpt model with gpt_config_124m
 
- print("Input shape:", x.shape)
- print("Output shape:", output.shape)
+ #delegate into a variable the output context vector
+ out = model(batch)
+ print("Input batch:\n", batch)
+ print("\nOutput shape:", out.shape)
+ print(out)
+
+ #get model's total paremeters
+ total_params = sum(p.numel() for p in model.parameters())
+ print(f"Total number of parameters: {total_params:,}")
+
+ total_params_gpt2 = (
+  ##apply weight tyes
+  total_params - sum(p.numel()
+  for p in model.out_head.parameters())
+)
+ print(f"Number of trainable parameters "
+ f"considering weight tying: {total_params_gpt2:,}"
+)
  
 
 main()
