@@ -170,7 +170,7 @@ class FeedForward(nn.Module):
 
 
 #mocked deep neural network
-class MockedDeepNeuralNetwork(nn.Module):
+class DeepNeuralNetwork(nn.Module):
    def __init__(self, layer_sizes, use_shortcut):
       super().__init__()
       self.use_shortcut = use_shortcut

@@ -450,3 +450,14 @@ Finally the transformer block encapsulates the Multiheadattention mechanism, the
 8. Dropout randomly some weigths and add the FeedForarward's input into the original X
 9. Return the output X ready for the next transformers block
 
+
+
+### The next step is to call the gpt model class itself to predict the next token
+The GPT MODEL class accepts as an input a new text in a token ID sequence format. 
+Initially the token IDs are being converted into embeddings and positional embeddings are being added into the original embeddings in order to communicate each token's
+index into the model. 
+Afterwards the tokens are being processed iteratively through the Transformers blocks. Each block contains the multihead attention mechanism which allows the models to
+investigate the relation between the tokens. The feed forward mechanism inside the transformers block passes the tokens through a layer normalization to normalize the values.
+After the first normalization layers the tokens pass through the GELU ACTIVATION mechanism which calculates a mean close to zero and variance in 1. Then the tokens pass again a second normalization layer to return back the original form. Inside the transformer blocks shortcuts are being applied which get the previous output and add it into the next
+vector's output. Then the transformers block applies an output linear layer which transforms the data into logits for all vocabulary's tokens. 
+Finally, the GPT MODEL has a propability score for each input's index to know which token is the next one. 
