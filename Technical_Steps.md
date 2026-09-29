@@ -497,3 +497,10 @@ inputs ──→ GPTModel ──→ logits
                     Perplexity
 
 ```
+
+
+## Prepare Datasets
+
+## Note
+In practice, it can also be beneficial to train an LLM with variable-length inputs to help the LLM to better
+generalize across different types of inputs when it is being used.
