@@ -4,17 +4,135 @@ from gptmodel.config import GPT_CONFIG_124M as cfg
 import torch
 from gptmodel.gpt_model import  TransformerBlock
 import tiktoken as tk
+from dataloader.windowslider import LoadData
 ##test DataLoad from pytorch
 def main():
+ 
+ #create an instance of LoadData class
+ data_loader = LoadData()
+
+ #create an instance of GPTModel class
+ model = GPTModel(cfg)
+ 
+ #let's prepare the data
+ def load_text(): 
+ 
+  file_path = "C:/Users/Overkill/Desktop/train-llm/BaseLLM/datasets/the_verdict.txt"
+  with open(file_path, "r", encoding="utf-8") as file:
+   text_data = file.read()
+  return text_data
+
+  # Create the GPT-2 tokenizer
+ tokenizer = tk.get_encoding("gpt2")
+
+  #call the load data method
+ dataset = load_text()
+ #get total chars
+ total_characters = len(dataset)
+ #get total tokens
+ total_tokens = len(tokenizer.encode(dataset))
+ #print("Characters:", total_characters)
+ #print("Tokens:", total_tokens)
+
+ train_ratio = 0.90
+ split_idx = int(train_ratio * len(dataset)) #multiply train ratio with dataset's length to get the 90% of the text
+ train_data = dataset[:split_idx] #split the remain 10%
+ val_data = dataset[split_idx:]
+ #split data
+ #we will use a ration of 90% for training data and 10% for validation data
+
+ #define a method which splits the dataset into trainable and validation data
+ def split_dataset(train_data,val_data):
+
+  ##now using train_data val_data we can create the dataset loader
+  torch.manual_seed(123) #manual nums to create the trainable weigths
+  #create the train loader
+  train_loader = data_loader.create_dataloader_v1(
+  train_data,
+  batch_size=2,
+  max_length=cfg["context_length"],
+  stride=cfg["context_length"],
+  drop_last=True,
+  shuffle=True,
+  num_workers=0
+  )
+  #define the validation loader
+  val_loader = data_loader.create_dataloader_v1(
+  val_data,
+  batch_size=2,
+  max_length=cfg["context_length"],
+  stride=cfg["context_length"],
+  drop_last=False,
+  shuffle=False,
+  num_workers=0
+  )
+
+  return train_loader, val_loader
+  #return f"Data was splitted with success"
+
+ trainable_data,validation_data =split_dataset(train_data,val_data)
+
+ #create a function to calculate a cross entropy loss of a given batch
+ def calc_loss_batch(input_batch, target_batch, model, device):
+ 
+  """ The transfer to a given device allows us to transfer the data to a GPU."""
+ 
+  input_batch = input_batch.to(device)
+  target_batch = target_batch.to(device)
+  logits = model(input_batch) #calculate the logits from the input batch
+  #calculate the loss
+  loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1), target_batch.flatten())
+  return loss
 
 
+ #function to calculate the loss of all given batches from the data loader
+ def calc_loss_loader(data_loader, model, device, num_batches=None):
+  total_loss = 0
+  #return an error message if no data exists
+  if len(data_loader) == 0: 
+    return float("nan")
+  #iterate through all batches if num_batches has not being given
+  elif num_batches is None:
+    num_batches = len(data_loader)
+    """else block reduces the number of batches to match the total number of batches in the data loader if num_batches exceeds the number of batches in the data loader"""
+  else:
+    num_batches = min(num_batches, len(data_loader))
+  for i, (input_batch, target_batch) in enumerate(data_loader):
+   
+   if i < num_batches:
+    #calculate the loss of each batch
+    loss = calc_loss_batch(input_batch, target_batch, model, device)
+    total_loss += loss.item() #summarize the loss of each batch
+   else:
+    break
+   return total_loss / num_batches ##return the average loss  of all batches if i == num_batches
+
+ #if a cuda gpu is available train the llm on cuda, otherwise on the cpu
+ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+ model.to(device) ##force model to train on the available device
+ with torch.no_grad(): #disable gradient for efficiency since we are not training yet
+  train_loss = calc_loss_loader(trainable_data, model, device)
+  val_loss = calc_loss_loader(validation_data, model, device)
+
+ #print losses
+ print("Training loss:", train_loss)
+ print("Validation loss:", val_loss)
+
+ 
+
+
+
+
+"""
  ##test the gpt model
  torch.manual_seed(123)
+
  batch = torch.randint(
     0,
     cfg["vocab_size"],
     (2, 4)
 )
+
  model = GPTModel(cfg) #instanciate a model using the gpt model with gpt_config_124m
 
 
@@ -122,6 +240,7 @@ def main():
  perplexity = torch.exp(loss)
  print(perplexity)
 
+"""
 
  
 
