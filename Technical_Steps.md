@@ -461,3 +461,39 @@ investigate the relation between the tokens. The feed forward mechanism inside t
 After the first normalization layers the tokens pass through the GELU ACTIVATION mechanism which calculates a mean close to zero and variance in 1. Then the tokens pass again a second normalization layer to return back the original form. Inside the transformer blocks shortcuts are being applied which get the previous output and add it into the next
 vector's output. Then the transformers block applies an output linear layer which transforms the data into logits for all vocabulary's tokens. 
 Finally, the GPT MODEL has a propability score for each input's index to know which token is the next one. 
+
+
+
+# Backpropagation, cross-entropy and perplexity
+
+In a real GPT training pipeline, the process begins with a raw text dataset, which is first tokenized using a tokenizer such as the GPT-2 tokenizer.
+The resulting text is converted into numerical token IDs, which are then divided into inputs and targets for next-token prediction.
+The inputs contain the current tokens, while the targets contain the same sequence shifted one position to the right, so the model learns to predict the next token. 
+The input batch is then passed to the object from the GPT model class using logits = model(inputs). 
+The model processes the tokens through the token and positional embeddings, transformer blocks, final normalization, and output layer, producing logits with the shape (batch_size, sequence_length, vocabulary_size).
+The logits and targets are then flattened using logits.flatten(0, 1) and targets.flatten() so that they can be compared by PyTorch's cross-entropy function.
+The cross-entropy loss measures how well the model predicts the correct next token across all positions in the batch. During training, this loss is used with loss.backward() and an optimizer to update the model's parameters. 
+Finally, perplexity can be calculated from the loss using torch.exp(loss), providing an alternative measure of the model's uncertainty when predicting the next tokens.
+
+```
+Raw text / dataset
+       ↓
+Tokenization
+       ↓
+Token IDs
+       ↓
+Create input-target pairs
+       ↓
+Batch them
+       ↓
+inputs ──→ GPTModel ──→ logits
+                         ↓
+                    flatten logits
+                         +
+                    flatten targets
+                         ↓
+                  Cross-Entropy Loss
+                         ↓
+                    Perplexity
+
+```
