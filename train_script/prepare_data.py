@@ -43,6 +43,7 @@ class PrepareData:
       shuffle=False,
       num_workers=0
       )
+      
       return train_loader, val_loader
 
 

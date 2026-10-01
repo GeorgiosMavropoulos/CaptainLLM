@@ -503,4 +503,517 @@ inputs ──→ GPTModel ──→ logits
 
 ## Note
 In practice, it can also be beneficial to train an LLM with variable-length inputs to help the LLM to better
-generalize across different types of inputs when it is being used.
+generalize across different types of inputs when it is being used. 
+First we have to prepare the datasets. Using the dataset loader we can load the required dataset which we will use for the training. 
+
+# Train
+The training pipeline was refactored into separate modules to improve code organization and maintainability. A `PrepareData` class was implemented to load the dataset, split the text into training and validation subsets, and create the corresponding PyTorch data loaders using the configured context length, batch size, stride, shuffling, and `drop_last` settings. 
+The `CalculateLoss` class was introduced to centralize the loss calculation logic, providing methods for calculating the cross-entropy loss for individual batches and averaging the loss across a configurable number of batches from a data loader.
+
+ A `TextGeneration` class was implemented to handle autoregressive text generation by repeatedly passing the latest context tokens through the model, applying softmax to the output logits, selecting the next token using greedy decoding, and appending it to the existing sequence. The class also provides functionality for generating and decoding a sample after each training epoch.
+
+The main training logic was moved into a `Train` class. The `train_model_simple()` method performs the training loop by iterating through the training batches, resetting the optimizer gradients, calculating the batch loss, performing backpropagation, updating the model parameters, tracking the number of processed tokens, and periodically evaluating the model. The `evaluate_model()` method switches the model to evaluation mode and uses `torch.no_grad()` to calculate both training and validation loss without computing gradients, after which the model is returned to training mode. During training, losses and the number of tokens seen are recorded for later analysis, while generated text samples are produced at the end of each epoch to monitor the model's qualitative progress.
+
+The `main.py` file acts as the orchestration layer of the project. It initializes the tokenizer and GPT model, prepares the training and validation data, selects the execution device using `torch.cuda.is_available()`, moves the model to the selected device, creates the optimizer, and starts the training process through the `Train` class. The dataset was configured using the complete *Dracula* text by Bram Stoker, resulting in 416 training batches and 45 validation batches with the current batch and context-length configuration. The model was configured with a GPT-2-small-style architecture consisting of a vocabulary size of 50,257, a context length of 256 tokens, an embedding dimension of 768, 12 attention heads, and 12 transformer layers. 
+
+
+### Temperature and top-k to improve text generation
+
+
+When generating text, the model produces a vector of **logits** for the next token. These logits represent the model's relative preference for each token in the vocabulary. We then convert these logits into probabilities using the softmax function.
+
+For example, suppose the model predicts the following probabilities for the next token:
+
+```text
+"the"      → 0.50
+"of"       → 0.25
+"in"       → 0.15
+"to"       → 0.07
+"and"      → 0.03
+```
+
+The model can then either select the token with the highest probability or **sample** a token according to this probability distribution.
+
+Temperature and top-k are two techniques that modify this distribution before sampling.
+
+---
+
+### Temperature
+
+The **temperature** parameter controls how sharp or flat the probability distribution becomes.
+
+We apply temperature to the logits before applying softmax:
+
+```python
+logits = logits / temperature
+probabilities = torch.softmax(logits, dim=-1)
+```
+
+The important point is that temperature does not change the model's learned logits themselves. It changes how those logits are converted into probabilities during generation.
+
+A temperature of `1.0` leaves the logits unchanged:
+
+```text
+logits / 1.0 = logits
+```
+
+Therefore, the original probability distribution is preserved.
+
+When the temperature is **below 1.0**, the differences between logits become larger relative to each other. This makes the probability distribution sharper, giving more probability mass to the most likely tokens.
+
+For example:
+
+```text
+Temperature = 0.5
+
+"the"  → 0.75
+"of"   → 0.15
+"in"   → 0.07
+"to"   → 0.02
+"and"  → 0.01
+```
+
+The model therefore becomes more deterministic because the most likely token dominates the distribution.
+
+When the temperature is **above 1.0**, the differences between logits become smaller. The resulting probability distribution becomes flatter, giving lower-probability tokens a greater chance of being sampled.
+
+For example:
+
+```text
+Temperature = 1.5
+
+"the"  → 0.35
+"of"   → 0.25
+"in"   → 0.20
+"to"   → 0.12
+"and"  → 0.08
+```
+
+Now there is more uncertainty in the distribution, so sampling can produce a wider variety of tokens.
+
+Therefore:
+
+```text
+temperature < 1
+    → sharper distribution
+    → more deterministic
+    → less variation
+
+temperature = 1
+    → original distribution
+
+temperature > 1
+    → flatter distribution
+    → more randomness
+    → more variation
+```
+
+It is common to describe higher temperatures as producing more "creative" text, but technically temperature controls **randomness and diversity**, not creativity itself. Whether the resulting text is actually better or more creative depends on the model, prompt, and task.
+
+In our implementation, we use `temperature=0.0` as a special case:
+
+```python
+if temperature > 0.0:
+    logits = logits / temperature
+    probabilities = torch.softmax(logits, dim=-1)
+    idx_next = torch.multinomial(
+        probabilities,
+        num_samples=1
+    )
+else:
+    idx_next = torch.argmax(
+        logits,
+        dim=-1,
+        keepdim=True
+    )
+```
+
+This means that `temperature=0.0` does not literally perform:
+
+```python
+logits / 0
+```
+
+Instead, it disables random sampling and uses greedy decoding, where the token with the highest logit is always selected.
+
+---
+
+### Top-k Sampling
+
+Temperature controls the shape of the probability distribution, while **top-k sampling limits the number of tokens that are allowed to participate in sampling**.
+
+For example, suppose the model has the following probabilities:
+
+```text
+"the"       → 0.40
+"of"        → 0.25
+"in"        → 0.15
+"to"        → 0.08
+"and"       → 0.05
+"with"      → 0.03
+"because"   → 0.02
+...
+```
+
+If we set:
+
+```python
+top_k = 3
+```
+
+we keep only the three tokens with the highest logits:
+
+```text
+"the"       → keep
+"of"        → keep
+"in"        → keep
+```
+
+and remove the remaining candidates:
+
+```text
+"to"        → remove
+"and"       → remove
+"with"      → remove
+"because"   → remove
+...
+```
+
+In the implementation, we do this by replacing the logits of the unwanted tokens with negative infinity:
+
+```python
+top_logits, _ = torch.topk(logits, top_k)
+min_val = top_logits[:, -1]
+
+logits = torch.where(
+    logits < min_val,
+    torch.tensor(float("-inf"), device=logits.device),
+    logits
+)
+```
+
+The important detail is that we are replacing the **logits**, not directly setting the probabilities to zero.
+
+Why `-inf`?
+
+Because when softmax is subsequently applied:
+
+```python
+probabilities = torch.softmax(logits, dim=-1)
+```
+
+a logit of `-inf` receives probability zero.
+
+Conceptually:
+
+```text
+logit = -inf
+       ↓
+softmax
+       ↓
+probability = 0
+```
+
+Therefore, those tokens can no longer be selected by `torch.multinomial()`.
+
+---
+
+### Temperature and Top-k Work Together
+
+Temperature and top-k solve two different problems.
+
+Temperature controls **how the probability distribution is shaped**:
+
+```text
+Temperature
+    ↓
+How strongly should we prefer high-probability tokens?
+```
+
+Top-k controls **how many candidate tokens are allowed**:
+
+```text
+Top-k
+    ↓
+Which tokens are allowed to participate?
+```
+
+For example:
+
+```python
+temperature = 0.7
+top_k = 10
+```
+
+means:
+
+1. Keep only the 10 tokens with the highest logits.
+2. Divide their logits by `0.7`.
+3. Apply softmax.
+4. Sample one token from the resulting distribution.
+
+The overall process can therefore be viewed as:
+
+```text
+Model
+  ↓
+Logits
+  ↓
+Top-k filtering
+  ↓
+Remove low-ranked candidates
+  ↓
+Temperature scaling
+  ↓
+Softmax
+  ↓
+Probability distribution
+  ↓
+Multinomial sampling
+  ↓
+Next token
+```
+
+Depending on the implementation, temperature and top-k can be applied in a slightly different order, but the important idea is that both modify the candidates/distribution before sampling.
+
+---
+
+### Greedy Decoding vs Sampling
+
+Without sampling, we can simply choose the token with the largest logit:
+
+```python
+idx_next = torch.argmax(logits, dim=-1, keepdim=True)
+```
+
+For example:
+
+```text
+the   → 0.50
+of    → 0.25
+in    → 0.15
+to    → 0.07
+and   → 0.03
+```
+
+`argmax` always selects:
+
+```text
+"the"
+```
+
+There is no randomness.
+
+With multinomial sampling:
+
+```python
+idx_next = torch.multinomial(
+    probabilities,
+    num_samples=1
+)
+```
+
+the model samples according to the probability distribution.
+
+For example:
+
+```text
+the   → 50%
+of    → 25%
+in    → 15%
+to    → 7%
+and   → 3%
+```
+
+So `"the"` is still the most likely token, but `"of"` or `"in"` can also be selected.
+
+This is what introduces stochasticity into generation.
+
+---
+
+### Example
+
+Consider the following distribution:
+
+```text
+"the"       → 50%
+"of"        → 25%
+"in"        → 15%
+"to"        → 7%
+"because"   → 3%
+```
+
+With greedy decoding:
+
+```text
+temperature = 0
+```
+
+the model always chooses:
+
+```text
+"the"
+```
+
+With sampling and:
+
+```text
+temperature = 1.0
+top_k = 5
+```
+
+all five candidates remain available and are sampled according to their probabilities.
+
+With:
+
+```text
+temperature = 0.5
+top_k = 5
+```
+
+the distribution becomes sharper, so `"the"` becomes even more dominant.
+
+With:
+
+```text
+temperature = 1.5
+top_k = 5
+```
+
+the distribution becomes flatter, increasing the probability of selecting lower-ranked candidates.
+
+With:
+
+```text
+temperature = 1.0
+top_k = 2
+```
+
+only:
+
+```text
+"the"
+"of"
+```
+
+can be selected. All other tokens have effectively zero probability.
+
+---
+
+### Choosing Top-k
+
+There is no universally correct value for `top_k`.
+
+It is a decoding hyperparameter that depends on the model and the task.
+
+For example, we might experiment with:
+
+```text
+top_k = 5
+top_k = 10
+top_k = 25
+top_k = 50
+top_k = 100
+```
+
+and compare the generated outputs.
+
+A very small `top_k` restricts the model heavily:
+
+```text
+top_k = 2
+→ very few candidates
+→ less variation
+```
+
+A larger `top_k` gives the model more possible choices:
+
+```text
+top_k = 100
+→ many candidates
+→ more variation
+```
+
+Setting:
+
+```python
+top_k = None
+```
+
+means that no top-k filtering is applied, so the complete vocabulary remains available for sampling.
+
+---
+
+### Deterministic Generation
+
+If our goal is to make generation deterministic, we need to disable random sampling.
+
+In our implementation, this is achieved by using greedy decoding:
+
+```python
+temperature = 0.0
+```
+
+with:
+
+```python
+top_k = None
+```
+
+The important part is that the code enters the `argmax` branch instead of the `multinomial` sampling branch.
+
+As a result, for the same model weights and the same input tokens, the generation procedure always selects the same next token.
+
+This makes the output reproducible, assuming the rest of the generation pipeline is also deterministic.
+
+---
+
+### Summary
+
+Temperature and top-k affect generation in different ways:
+
+```text
+Temperature
+    ↓
+Controls the sharpness of the probability distribution
+
+Low temperature
+    → sharper distribution
+    → more predictable output
+
+High temperature
+    → flatter distribution
+    → more random/varied output
+```
+
+while:
+
+```text
+Top-k
+    ↓
+Controls how many of the highest-ranked tokens remain candidates
+
+Small top-k
+    → fewer possible tokens
+    → more restricted generation
+
+Large top-k
+    → more possible tokens
+    → less restricted generation
+```
+
+Finally:
+
+```text
+Greedy decoding
+→ argmax
+→ no random sampling
+→ deterministic
+
+Sampling
+→ softmax
+→ multinomial
+→ stochastic
+```
+
+Therefore, temperature determines **how probability is distributed among the candidates**, while top-k determines **which candidates are allowed to participate in that distribution**.
