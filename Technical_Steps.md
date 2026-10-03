@@ -1017,3 +1017,13 @@ Sampling
 ```
 
 Therefore, temperature determines **how probability is distributed among the candidates**, while top-k determines **which candidates are allowed to participate in that distribution**.
+
+
+#### Save training state
+In order to save training process we can use the command:
+torch.save({
+"model_state_dict": model.state_dict(), #save current model's state
+"optimizer_state_dict": optimizer.state_dict(), #save optimizers
+},
+"model_and_optimizer.pth" #create the file containing the weigths
+)
