@@ -1,0 +1,9 @@
+# Ignore pretrained weights
+*.pth
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore gpt's 2 weigths
+gpt2/
