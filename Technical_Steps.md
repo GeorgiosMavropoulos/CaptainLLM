@@ -1027,3 +1027,29 @@ torch.save({
 },
 "model_and_optimizer.pth" #create the file containing the weigths
 )
+
+
+
+# Load pretrained weigths
+The process starts with the right architecture. First we have to set up a configuration file matching pretrain model's one. Then we define a new model object and we pass into the model the configuration file. This means that the basic dimensions, context_length, vocabulary's size and layers should match with the ones from the pretrained model.
+If the architecture differs we have to figure out a way to match it with our layers
+
+Afterwards we have to load or download the pretrained checkpoint. Checkpoint contains the parameters the model learned during its training. Usually, these parameters are 
+in some kind of dictionary or state_dict, but their naming or structure may differ from our layer's names. We have to create a mapping dictionary in order to match them.
+
+Before we try to transfer the weigths we have to check that parameter's shape is compatible. For instance, a pretrained weigth matrix must have the same dimensions as the weigth matrix of the correspoding layer. If the correspoding layer has different orientation, it may needs a transformation to be applied, like transpose. If a paremeter is differently organized, it may needs split, merge or reshap. The core principle is that we do not transfer just names, we transfer tensors from one model to the other.
+
+After we have mapped the parameters, the pretrained parameters replace the initial ones. At this point we have a pretrained model with knowledge and we can use it for inference or start fine-tunning it. If we decide to fine tune it, we have to use an optimizer like AdamW's and we start to train the model to the new dataset. On each training step we calculate the loss from training and validation, we perform the loss.backward() (backpropagation) in order to compute the gradients and then we do the optimizer.step() to update the weigths.
+
+The general recipe is: 
+(1) create a compatible model architecture →
+(2) load the pretrained checkpoint → 
+(3) map the checkpoint parameters to the model parameters → 
+(4) check shapes and perform any necessary transformations →
+(5) load the pretrained weights → 
+(6) perform inference or fine-tuning → 
+(7) monitor the metrics and select the best checkpoint →
+(8) save the model state and, if needed, the optimizer state →
+(9) recreate the architecture later → 
+(10) load the model and optimizer states →
+(11) continue training or perform inference.
