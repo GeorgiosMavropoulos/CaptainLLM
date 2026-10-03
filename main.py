@@ -98,7 +98,24 @@ model_size="124M", models_dir="gpt2"
 
  ##define the new model
  model_name = "gpt2-small (124M)"
- NEW_CONFIG = GPT_CONFIG_124M.copy()
+ NEW_CONFIG = cfg.copy() # create a configuration file's copy
+ #update config file
+ NEW_CONFIG.update(model_configs[model_name])
+
+ #update context_length to 1024 since this is the context length gpt uses
+ NEW_CONFIG.update({"context_length": 1024})
+
+ #instanciate a new gpt model
+ gpt2_model= GPTModel(NEW_CONFIG)
+ gpt2_model.eval()
+
+ #left side is our trainable weigths and the right the ones we want to load (the pretrained ones from gpt)
+ def assign(left, right): #this method returns an error message if left tensor does not has the same shape with the right one
+   if left.shape != right.shape:
+    raise ValueError(f"Shape mismatch. Left: {left.shape}, "
+   "Right: {right.shape}"
+   )
+   return torch.nn.Parameter(torch.tensor(right)) #create the right shape into a tensor since we want to load it
  
 
 
