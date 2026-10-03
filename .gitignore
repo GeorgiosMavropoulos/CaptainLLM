@@ -7,3 +7,5 @@ __pycache__/
 
 # Ignore gpt's 2 weigths
 gpt2/
+
+datasets/sms_spam_collection/
