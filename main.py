@@ -9,7 +9,7 @@ from tokenizer_bpe.__tokenizer import _Tokenizer
 import torch
 
 from load_weigths.load_weigths import LoadWeigths
-from gpt_download import download_and_load_gpt2
+from download_datasets.gpt_download import download_and_load_gpt2
 
 def main():
 
