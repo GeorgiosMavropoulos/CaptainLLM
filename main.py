@@ -57,6 +57,7 @@ def main():
   val_loss = calculate_loss.calc_loss_loader(val_data, model, device)
  
  torch.manual_seed(123)
+ """
  #implement the AdamW optimizer which penalizes larger weigths in order to avoid overfitting
  optimizer = torch.optim.AdamW(model.parameters(),lr=0.0004, weight_decay=0.1)
 
@@ -68,10 +69,61 @@ model, train_data, val_data, optimizer, device,
 num_epochs=num_epochs, eval_freq=5, eval_iter=5,
 start_context="Having had some time at my disposal when in", tokenizer=tokenizer
 )
- 
- print("Train batches:", len(train_data))
- print("Val batches:", len(val_data))
- print("Expected training steps:", len(train_data) * num_epochs)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+ torch.save({
+"model_state_dict": model.state_dict(),
+"optimizer_state_dict": optimizer.state_dict(),
+},
+"model_and_optimizer.pth"
+) #save model's weigths and Adam's optimizers
+
+
+ #load the pretrained weigths
+ checkpoint = torch.load("model_and_optimizer.pth", map_location=device)
+ #define a new model
+ model2 = GPTModel(cfg)
+ model2.load_state_dict(checkpoint["model_state_dict"]) #load previous model's state
+ optimizer2 = torch.optim.AdamW(model.parameters(), lr=5e-4, weight_decay=0.1) #apply AdamW's optimizer
+ optimizer2.load_state_dict(checkpoint["optimizer_state_dict"])
+
+ num_epochs = 10
+ train_losses, val_losses, tokens_seen = train.train_model_simple(
+ model, train_data, val_data, optimizer2, device,
+ num_epochs=num_epochs, eval_freq=5, eval_iter=5,
+ start_context="Every effort moves you", tokenizer=tokenizer
+ )
+ model2.train()#train the model again
+ torch.save({
+ "model_state_dict2": model.state_dict(),
+ "optimizer_state_dict2": optimizer2.state_dict(),
+ },
+ "model_and_optimizer_updated.pth"
+ ) #save model's weigths and Adam's optimizers
+ """
+ #train for a third time
+  #load the pretrained weigths
+ checkpoint = torch.load("model_and_optimizer_updated.pth", map_location=device)
+ #define a new model
+ model3 = GPTModel(cfg)
+ model3.load_state_dict(checkpoint["model_state_dict2"]) #load previous model's state
+ optimizer3 = torch.optim.AdamW(model.parameters(), lr=5e-4, weight_decay=0.1) #apply AdamW's optimizer
+ optimizer3.load_state_dict(checkpoint["optimizer_state_dict2"])
+
+ num_epochs = 11
+ train_losses, val_losses, tokens_seen = train.train_model_simple(
+ model, train_data, val_data, optimizer3, device,
+ num_epochs=num_epochs, eval_freq=5, eval_iter=5,
+ start_context="Every effort moves you", tokenizer=tokenizer
+ )
+ model3.train()#train the model again
+ torch.save({
+ "model_state_dict3": model3.state_dict(),
+ "optimizer_state_dict3": optimizer3.state_dict(),
+ },
+ "model_and_optimizer_updated2.pth"
+ ) #save model's weigths and Adam's optimizers
 
  
 

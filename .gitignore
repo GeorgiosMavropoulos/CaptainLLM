@@ -1,0 +1,6 @@
+# Ignore pretrained weights
+*.pth
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
