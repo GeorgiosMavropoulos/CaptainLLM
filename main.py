@@ -8,17 +8,13 @@ from train_script.calculate_loss_functions import CalculateLoss
 from tokenizer_bpe.__tokenizer import _Tokenizer
 import torch
 
+from load_weigths.load_weigths import LoadWeigths
 from gpt_download import download_and_load_gpt2
-
 
 def main():
 
-
- if torch.cuda.is_available():
-    print("GPU:", torch.cuda.get_device_name(0))
-
- #create an instance of GPTModel class
- model = GPTModel(cfg)
+ ##create an instance of load weights class
+ load_gpt_weigths  = LoadWeigths()
 
  #instnace of calculate loss class
  calculate_loss = CalculateLoss()
@@ -28,67 +24,11 @@ def main():
  #initialize the tokinizer
  tokenizer = _Tokenizer()
 
-
  #call the prepare dataset function from PrepareData class (prepare_data file) to split the dataset into trainable and validation data
   ##create an instance of prepare data class to split the text
  prepare_dataset = PrepareData()
- 
- #filepath of the train text
- filepath = "C:/Users/Overkill/Desktop/train-llm/BaseLLM/datasets/dracula.txt"
 
- train_ratio = 0.90 
- #call prepare data method from prepare data class to split the data into trainable and validation data
- train_data,val_data = prepare_dataset.prepare_data_for_training(filepath,train_ratio)
-
- 
- #if a cuda gpu is available train the llm on cuda, otherwise on the cpu
- device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
- 
- model.to(device) ##force model to train on the available device
-
- with torch.no_grad(): #disable gradient for efficiency since we are not training yet
-  train_loss = calculate_loss.calc_loss_loader(train_data, model, device)
-  val_loss = calculate_loss.calc_loss_loader(val_data, model, device)
- 
- torch.manual_seed(123)
- """
- #call load weigths from gpt method
- settings, params = download_and_load_gpt2(
-model_size="124M", models_dir="gpt2"
-)
- """
-
- #start training function
- def start_training():
-    #train for a third time
-    #load the pretrained weigths
-    checkpoint = torch.load("model_and_optimizer_updated.pth", map_location=device)
-    #define a new model
-    model3 = GPTModel(cfg)
-    model3.load_state_dict(checkpoint["model_state_dict2"]) #load previous model's state
-    optimizer3 = torch.optim.AdamW(model.parameters(), lr=5e-4, weight_decay=0.1) #apply AdamW's optimizer
-    optimizer3.load_state_dict(checkpoint["optimizer_state_dict2"])
-
-    num_epochs = 11
-    train_losses, val_losses, tokens_seen = train.train_model_simple(
-    model, train_data, val_data, optimizer3, device,
-    num_epochs=num_epochs, eval_freq=5, eval_iter=5,
-    start_context="Every effort moves you", tokenizer=tokenizer
-    )
-    model3.train()#train the model again
-    torch.save({
-    "model_state_dict3": model3.state_dict(),
-    "optimizer_state_dict3": optimizer3.state_dict(),
-    },
-    "model_and_optimizer_updated2.pth"
-    ) #save model's weigths and Adam's optimizers
- #call start training method
- #start_training()
-
-
-
-
- #list model's differences
+  #list model's differences
  model_configs = {
 "gpt2-small (124M)": {"emb_dim": 768, "n_layers": 12, "n_heads": 12},
 "gpt2-medium (355M)": {"emb_dim": 1024, "n_layers": 24, "n_heads": 16},
@@ -104,18 +44,67 @@ model_size="124M", models_dir="gpt2"
 
  #update context_length to 1024 since this is the context length gpt uses
  NEW_CONFIG.update({"context_length": 1024})
+ NEW_CONFIG.update({"qkv_bias":True})
 
  #instanciate a new gpt model
  gpt2_model= GPTModel(NEW_CONFIG)
- gpt2_model.eval()
 
- #left side is our trainable weigths and the right the ones we want to load (the pretrained ones from gpt)
- def assign(left, right): #this method returns an error message if left tensor does not has the same shape with the right one
-   if left.shape != right.shape:
-    raise ValueError(f"Shape mismatch. Left: {left.shape}, "
-   "Right: {right.shape}"
-   )
-   return torch.nn.Parameter(torch.tensor(right)) #create the right shape into a tensor since we want to load it
+
+ #load into our model gpt2's trained weigths
+ def load_gpt2_weigths():
+   #load gpt model
+   settings, params = download_and_load_gpt2(
+      model_size="124M", models_dir="gpt2"
+      )
+   load_gpt_weigths.load_weights_into_gpt(gpt2_model, params) #load the updated parameters into our gpt's instance
+ 
+
+ #method to update gpt model and load the new weigths
+ #start training function
+ def start_training():
+
+     load_gpt2_weigths()#call this method to update the model's weigths
+     
+    #filepath of the train text
+     filepath = "C:/Users/Overkill/Desktop/train-llm/BaseLLM/datasets/the_verdict.txt"
+
+     train_ratio = 0.90 
+     #call prepare data method from prepare data class to split the data into trainable and validation data
+     train_data,val_data = prepare_dataset.prepare_data_for_training(filepath,train_ratio)
+
+     #if a cuda gpu is available train the llm on cuda, otherwise on the cpu
+     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+     gpt2_model.to(device)
+
+     with torch.no_grad(): #disable gradient for efficiency since we are not training yet
+      train_loss = calculate_loss.calc_loss_loader(train_data, gpt2_model, device)
+      val_loss = calculate_loss.calc_loss_loader(val_data, gpt2_model, device)
+     
+     torch.manual_seed(123)
+     
+     optimizer = torch.optim.AdamW(gpt2_model.parameters(), lr=5e-5, weight_decay=0.1)
+     num_epochs = 5
+     train_losses, val_losses, tokens_seen = train.train_model_simple(
+     gpt2_model, train_data, val_data, optimizer, device,
+    num_epochs=num_epochs, eval_freq=5, eval_iter=5,
+    start_context="Every effort moves you", tokenizer=tokenizer
+    )
+     gpt2_model.train()#train the model again
+
+     torch.save({
+        "model_state_dict": gpt2_model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        },
+        "model_and_optimizer_updated.pth"
+        ) #save model's weigths and Adam's optimizers
+    
+     
+ #call start training method
+ start_training()
+
+
+ 
  
 
 

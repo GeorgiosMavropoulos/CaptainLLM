@@ -54,7 +54,7 @@ class TextGeneration:
        encoded = torch.tensor(tokenizer.encoder(start_context),dtype=torch.long).unsqueeze(0).to(device)
        with torch.no_grad(): ##do not apply gradients
             #use the generate_text_simple method
-            token_ids = TextGeneration.generate_text(model=model, idx=encoded,max_new_tokens=15, context_size=context_size,temperature=1,top_k=0)
+            token_ids = TextGeneration.generate_text(model=model, idx=encoded,max_new_tokens=15, context_size=context_size,temperature=1.5,top_k=50)
             #decode the returned text
        decoded_text = tokenizer.decoder(token_ids[0].tolist())
        print(decoded_text.replace("\n", " "))#remove any unwanted symbols

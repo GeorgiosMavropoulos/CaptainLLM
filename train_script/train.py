@@ -40,7 +40,7 @@ class Train:
                             )
             #print a sample text after each epoch
             TextGeneration.generate_and_print_sample(model, tokenizer, device, start_context)
-            print("Total steps:", global_step)
+           
 
         return train_losses, val_losses, track_tokens_seen #return the losses
 
