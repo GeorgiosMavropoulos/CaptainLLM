@@ -1053,3 +1053,40 @@ The general recipe is:
 (9) recreate the architecture later → 
 (10) load the model and optimizer states →
 (11) continue training or perform inference.
+
+
+
+
+
+
+
+
+
+# Handling datasets which will be used for fine tunning
+Fine tunning is seperated to classification and instruction fine tunning. We will start from classification since it's simpler.
+
+# Handling the datasets
+1. Download the dataset and curate it properly. In the example I used an sms data labeled as spam for spam texts and ham for non spam messages.
+2. Frame the dataset in order to visualize the values.
+3. Count the labels in the frame. If labels are unequal (e.g. 30 ham and 50 spam) imbalance the dataset so you have 30 and 30.
+4. Convert the strings into integers (0 for ham and 1 for spam)
+5. Split the dataset following a niche approach (70% for training data, 10% validation data and 20% testing). You can use the following code:
+```
+def random_split(df, train_frac, validation_frac):
+    df = df.sample(
+    frac=1, random_state=123
+    ).reset_index(drop=True) # shuffle the entire dataframe
+    train_end = int(len(df) * train_frac) #calculate split indices
+    validation_end = train_end + int(len(df) * validation_frac)
+
+    train_df = df[:train_end] #split the dataframe 
+    validation_df = df[train_end:validation_end]
+    test_df = df[validation_end:]
+    return train_df, validation_df, test_df
+
+```
+
+6. Save the new datasets into csv filess
+
+
+## Create dataloaders using pytorch
