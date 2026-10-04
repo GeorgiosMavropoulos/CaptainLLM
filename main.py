@@ -7,7 +7,7 @@ from train_script.prepare_data import PrepareData
 from train_script.calculate_loss_functions import CalculateLoss
 from tokenizer_bpe.__tokenizer import _Tokenizer
 import torch
-
+from classification-fine-tuning.SplitData.prepare_data import PrepareTraining
 from load_weigths.load_weigths import LoadWeigths
 from download_datasets.gpt_download import download_and_load_gpt2
 
@@ -23,6 +23,8 @@ def main():
 
  #initialize the tokinizer
  tokenizer = _Tokenizer()
+
+ fine_tuning_test = PrepareTraining()
 
  #call the prepare dataset function from PrepareData class (prepare_data file) to split the dataset into trainable and validation data
   ##create an instance of prepare data class to split the text

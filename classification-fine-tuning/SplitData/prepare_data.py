@@ -14,3 +14,25 @@ class PrepareTraining:
                                 max_length=None,tokenizer=tokenizer)
 
     print(train_dataset.max_length)
+
+    #create the validation dataset 
+    val_dataset = SpamDataSet(
+        csv_file="C:/Users/Overkill/Desktop/train-llm/BaseLLM/classification-fine-tuning/datasets/validation.csv",
+        max_length=train_dataset.max_length,
+        tokenizer=tokenizer
+      )
+
+    print(val_dataset.max_length)
+
+    
+
+   #dataset for tests
+    test_dataset = SpamDataSet(
+        csv_file="C:/Users/Overkill/Desktop/train-llm/BaseLLM/classification-fine-tuning/datasets/test.csv",
+        max_length=train_dataset.max_length,
+        tokenizer=tokenizer
+        )
+
+    print(test_dataset.max_length)
+
+   
