@@ -11,12 +11,13 @@ import tiktoken as tk
 import pandas as pd
 
 
-class DataLoadersPyTorch:
+class SpamDataSet(Dataset):
     def __init__(self, csv_file, tokenizer, max_length=None,pad_token_id=50256):
 
      self.data = pd.read_csv(csv_file)
+     self.tokenizer = tokenizer
 
-     self.tokenizer = tk.get_encoding("gpt2") #get gpt2's encoding
+     
 
      #pretokenize texts
      self.encoded_texts = [self.tokenizer.encode(text) for text in self.data["Text"]]
@@ -28,7 +29,7 @@ class DataLoadersPyTorch:
 
         #truncate sequences if they are longer than max_length
         #multiply encoded_text + pad_token_id (50256) with max_length - the length of the encoded text 
-        self.encoded_texts = [encoded_text + [pad_token_id] *  (self.max_length - len(encoded_text)) for encoded_text in self.encoded_texts]
+     self.encoded_texts = [encoded_text + [pad_token_id] *  (self.max_length - len(encoded_text)) for encoded_text in self.encoded_texts]
 
 
     def __getitem__(self, index):
@@ -47,7 +48,7 @@ class DataLoadersPyTorch:
         max_length = 0
         for encoded_text in self.encoded_texts:
          encoded_length = len(encoded_text)
-        if encoded_length > max_length:
-         max_length = encoded_length
+         if encoded_length > max_length:
+          max_length = encoded_length
         return max_length
                                 
