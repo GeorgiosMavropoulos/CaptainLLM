@@ -47,8 +47,12 @@ class FineTune:
     model.eval()
 
     ## validate that the model works and can generate coherent text
-    text_1 = "Every effort moves you"
-    encoded = tokenizer.encoder(text_1) #encode text
+    text_2 = (
+"Is the following text 'spam'? Answer with 'yes' or 'no':"
+" 'You are a winner you have been specially"
+" selected to receive $1000 cash or a $2000 award.'"
+)
+    encoded = tokenizer.encoder(text_2) #encode text
     token_ids = generate_text.generate_text(
     model=model,
     
@@ -58,6 +62,9 @@ class FineTune:
     )
     decoded_text = tokenizer.decoder(token_ids.squeeze(0).tolist())
     print(decoded_text)
+
+    #let's validate the model on classification
+
 
     
     
