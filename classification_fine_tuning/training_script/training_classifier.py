@@ -2,6 +2,7 @@
 from ..calculate_loss.calculateloss import CalculateClassificationLoss
 from ..calculate_accuracy_loss.calculate_accuracy_loader import CalcAccuracy
 import torch
+
 class Trainer:
     def __init__(self):
       pass
@@ -13,6 +14,8 @@ class Trainer:
 
     #create an instance of calculate accuracy class
     calc_accuracy = CalcAccuracy()
+
+   
 
     #training function
     @staticmethod
@@ -60,6 +63,7 @@ class Trainer:
             ##append train's accuracy and val's accuracy values to the empty lists
             train_accs.append(train_accuracy)
             val_accs.append(val_accuracy)
+            
 
         return train_losses, val_losses, train_accs, val_accs, examples_seen
 
@@ -77,3 +81,8 @@ class Trainer:
              )
              model.train()
          return train_loss, val_loss
+
+
+    
+
+   
