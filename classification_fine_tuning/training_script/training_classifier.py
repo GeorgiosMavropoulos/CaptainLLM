@@ -5,11 +5,7 @@ import torch
 class Trainer:
     def __init__(self):
       pass
-    
-    
-     #Initialize lists to track losses andexamples seen
-    train_losses, val_losses, train_accs, val_accs = [], [], [], []
-    examples_seen, global_step = 0, -1
+ 
 
 
     #initialize an instance of calculate loss class
@@ -21,8 +17,12 @@ class Trainer:
     #training function
     @staticmethod
     def train_classifier(model, train_loader, val_loader, optimizer, device,num_epochs, eval_freq, eval_iter):
+        
+             #Initialize lists to track losses andexamples seen
+        train_losses, val_losses, train_accs, val_accs = [], [], [], []
+        examples_seen, global_step = 0, -1
         ##main training loop which trains the model based on the given epochs number
-        for i in range(num_epochs):
+        for epoch in range(num_epochs):
             model.train()
 
             for input_batch, target_batch in train_loader:
@@ -36,10 +36,10 @@ class Trainer:
                 if global_step % eval_freq == 0: #evaluation step 
                     train_loss, val_loss = Trainer.evaluate_model(
                     model, train_loader, val_loader, device, eval_iter)
-                    Trainer.train_losses.append(train_loss)
-                    Trainer.val_losses.append(val_loss)
+                    train_losses.append(train_loss)
+                    val_losses.append(val_loss)
                     print(f"Ep {epoch+1} (Step {global_step:06d}): "
-                    f"Train loss {train_loss:.3f}, "
+                    f"Train loss {train_loss:.3f},"
                     f"Val loss {val_loss:.3f}"
                     )
 
@@ -52,14 +52,16 @@ class Trainer:
             val_loader, model, device, num_batches=eval_iter
             )
 
+        
+
             #print training and validation accuracy
-            print(f"Training accuracy: {train_accuracy*100:.2f}% | ", end="")
+            print(f"Training accuracy: {train_accuracy*100:.2f}% |  ", end="")
             print(f"Validation accuracy: {val_accuracy*100:.2f}%")
             ##append train's accuracy and val's accuracy values to the empty lists
-            Trainer.train_accs.append(train_accuracy)
-            Trainer.val_accs.append(val_accuracy)
+            train_accs.append(train_accuracy)
+            val_accs.append(val_accuracy)
 
-        return Trainer.train_losses, Trainer.val_losses, Trainer.train_accs, Trainer.val_accs, examples_seen
+        return train_losses, val_losses, train_accs, val_accs, examples_seen
 
 
     #evaluate model function
@@ -67,10 +69,10 @@ class Trainer:
     def evaluate_model(model, train_loader, val_loader, device, eval_iter):
          model.eval()
          with torch.no_grad():
-             train_loss = Trainer.calc_accuracycalc_loss_loader(
+             train_loss = Trainer.calc_loss.calc_loss_loader(
              train_loader, model, device, num_batches=eval_iter
              )
-             val_loss = Trainer.calc_accuracycalc_loss_loader(
+             val_loss = Trainer.calc_loss.calc_loss_loader(
              val_loader, model, device, num_batches=eval_iter
              )
              model.train()

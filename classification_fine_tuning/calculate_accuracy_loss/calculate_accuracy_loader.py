@@ -7,7 +7,7 @@ class CalcAccuracy:
 
     #accuracy loader method
     @staticmethod
-    def cacl_accuracy_loader(data_loader,model,device, num_batches=None):
+    def calc_accuracy_loader(data_loader,model,device, num_batches=None):
         model.eval()
         correct_predictions, num_examples = 0, 0
 
