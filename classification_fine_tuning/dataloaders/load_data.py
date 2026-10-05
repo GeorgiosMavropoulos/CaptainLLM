@@ -1,7 +1,7 @@
 ### this file contains the code to load the data from the training batches
 from torch.utils.data import DataLoader
 import torch
-from SplitData.prepare_data import PrepareTraining 
+from ..SplitData.prepare_data import PrepareTraining 
 class LoadData:
     def __init__(self):
      pass

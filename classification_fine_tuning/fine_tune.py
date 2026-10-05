@@ -5,11 +5,9 @@ from gptmodel.gpt_model import GPTModel
 from load_weigths.load_weigths import LoadWeigths
 from train_script.generation import TextGeneration
 from tokenizer_bpe.__tokenizer import _Tokenizer
-from train_script.calculate_loss_functions import CalculateLoss
-from train_script.train import Train
-from calculate_accuracy_loss.calculate_accuracy_loader import CalcAccuracy
-from SplitData.prepare_data import PrepareTraining
-from dataloaders.load_data import LoadData
+
+from .dataloaders.load_data import LoadData
+
 import torch
 class FineTune:
     def __init__(self):
@@ -27,6 +25,9 @@ class FineTune:
     #initialize calculate accuracy class
     calc_accuracy = CalcAccuracy()
 
+    #initialize an instance of calculate loss class
+    calculate_loss = CalculateClassificationLoss()
+
     #initialiaze an instance of load data class
     load_data = LoadData()
 
@@ -40,7 +41,7 @@ class FineTune:
         }
 
         gpt2_small_model = "gpt2-small (124M)"
-        input = "Every effort moves"
+        
         
         cfg.update(model_configs[gpt2_small_model]) #update configurations for the gpt2_small
         
@@ -53,15 +54,15 @@ class FineTune:
     settings, params = download_and_load_gpt2(
     model_size=model_size, models_dir="gpt2"
     )
-    model = GPTModel(cfg)
-    load_weigths.load_weights_into_gpt(model, params)
-    model.eval()
+    gpt2_small_model = GPTModel(cfg)
+    load_weigths.load_weights_into_gpt(gpt2_small_model, params)
+    gpt2_small_model.eval()
 
 
      #update model's head output, since we want to output 2 tokens (o for ham and 1 for spam)
     torch.manual_seed(123)
     num_classes = 2
-    model.out_head = torch.nn.Linear(
+    gpt2_small_model.out_head = torch.nn.Linear(
     in_features=cfg["emb_dim"],
         out_features=num_classes
         )
@@ -70,43 +71,48 @@ class FineTune:
     #train the model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    model.to(device)
+    gpt2_small_model.to(device)
      
     #freeze model's parameters, since it's not necessary to train all the parameters
-    for param in model.parameters():
+    for param in gpt2_small_model.parameters():
      param.requires_grad = False
 
     # Unfreeze only the last Transformer block
-    for param in model.trf_blocks[-1].parameters():
+    for param in gpt2_small_model.trf_blocks[-1].parameters():
      param.requires_grad = True
 
     # Unfreeze only the final normalization layer
-    for param in model.final_norm.parameters():
+    for param in gpt2_small_model.final_norm.parameters():
      param.requires_grad = True
 
 
     inputs = tokenizer.encoder("You won 3000 euross")
     inputs = torch.tensor(inputs).unsqueeze(0)
    
-    with torch.no_grad():
-        outputs = model(inputs)
-      
-    logits = outputs[:, -1, :]
-    label = torch.argmax(logits) #computing the token with the highest probability score
+    with torch.no_grad(): #disable gradient for efficiency since we are not training yet
+         train_loss = calculate_loss.calc_loss_loader(load_data.train_loader, gpt2_small_model, device) #calculate train loss
+         val_loss = calculate_loss.calc_loss_loader(load_data.val_loader, gpt2_small_model, device) #calculate validation loss
+         test_loss = calculate_loss.calc_loss_loader(load_data.test_loader, gpt2_small_model, device) #calculate testing loss
+
 
     #calculate training accuracy
-    train_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.train_loader,model,device,num_batches=10)
+    train_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.train_loader,gpt2_small_model,device,num_batches=10)
 
     #calculate validation accuracy
-    validation_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.val_loader,model,device,num_batches=10)
+    validation_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.val_loader,gpt2_small_model,device,num_batches=10)
 
     #calculate test accuracy
-    testing_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.test_loader,model,device,num_batches=10)
+    testing_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.test_loader,gpt2_small_model,device,num_batches=10)
 
     #print accuracy
     print(f"Train accuracy:{train_accuracy*100:.2f}%")
     print(f"Validation accuracy:{validation_accuracy*100:.2f}%")
     print(f"Testing accuracy:{testing_accuracy*100:.2f}%")
+
+    #print losses
+    print(f"Train loss:{train_loss}")
+    print(f"Validation loss:{val_loss}")
+    print(f"Testing loss:{test_loss}")
 
     
      

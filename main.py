@@ -24,7 +24,7 @@ def main():
  #initialize the tokinizer
  tokenizer = _Tokenizer()
 
- fine_tuning_test = PrepareTraining()
+ 
 
  #call the prepare dataset function from PrepareData class (prepare_data file) to split the dataset into trainable and validation data
   ##create an instance of prepare data class to split the text

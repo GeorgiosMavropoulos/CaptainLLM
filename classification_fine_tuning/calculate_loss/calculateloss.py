@@ -1,6 +1,6 @@
 """This class contains the code to calculate loss in accuracy using the cross entropy method"""
 import torch
-class CalculateAccuracyLoss:
+class CalculateClassificationLoss:
     def __init__(self):
         pass
 
@@ -16,7 +16,7 @@ class CalculateAccuracyLoss:
             target_batch = target_batch.to(device)
             logits = model(input_batch)[:, -1, :] #calculate the logits from the input batch
             #calculate the loss
-            loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1), target_batch.flatten())
+            loss = torch.nn.functional.cross_entropy(logits, target_batch)
             return loss
 
 
@@ -39,7 +39,7 @@ class CalculateAccuracyLoss:
              
              if i < num_batches:
               #calculate the loss of each batch
-              loss = CalculateAccuracyLoss.calc_loss_batch(input_batch, target_batch, model, device)
+              loss = CalculateClassificationLoss.calc_loss_batch(input_batch, target_batch, model, device)
               total_loss += loss.item() #summarize the loss of each batch
              else:
               break
