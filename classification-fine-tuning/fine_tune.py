@@ -5,6 +5,11 @@ from gptmodel.gpt_model import GPTModel
 from load_weigths.load_weigths import LoadWeigths
 from train_script.generation import TextGeneration
 from tokenizer_bpe.__tokenizer import _Tokenizer
+from train_script.calculate_loss_functions import CalculateLoss
+from train_script.train import Train
+from calculate_accuracy_loss.calculate_accuracy_loader import CalcAccuracy
+from SplitData.prepare_data import PrepareTraining
+from dataloaders.load_data import LoadData
 import torch
 class FineTune:
     def __init__(self):
@@ -18,6 +23,12 @@ class FineTune:
 
     #create an instance of _Tokenizer class
     tokenizer = _Tokenizer()
+
+    #initialize calculate accuracy class
+    calc_accuracy = CalcAccuracy()
+
+    #initialiaze an instance of load data class
+    load_data = LoadData()
 
     def config_model():
 
@@ -46,24 +57,61 @@ class FineTune:
     load_weigths.load_weights_into_gpt(model, params)
     model.eval()
 
-    ## validate that the model works and can generate coherent text
-    text_2 = (
-"Is the following text 'spam'? Answer with 'yes' or 'no':"
-" 'You are a winner you have been specially"
-" selected to receive $1000 cash or a $2000 award.'"
-)
-    encoded = tokenizer.encoder(text_2) #encode text
-    token_ids = generate_text.generate_text(
-    model=model,
-    
-    idx = torch.tensor(encoded, dtype=torch.long).unsqueeze(0), #tensor the encoded text
-    max_new_tokens=15,
-    context_size=cfg["context_length"]
-    )
-    decoded_text = tokenizer.decoder(token_ids.squeeze(0).tolist())
-    print(decoded_text)
 
-    #let's validate the model on classification
+     #update model's head output, since we want to output 2 tokens (o for ham and 1 for spam)
+    torch.manual_seed(123)
+    num_classes = 2
+    model.out_head = torch.nn.Linear(
+    in_features=cfg["emb_dim"],
+        out_features=num_classes
+        )
+
+   
+    #train the model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    model.to(device)
+     
+    #freeze model's parameters, since it's not necessary to train all the parameters
+    for param in model.parameters():
+     param.requires_grad = False
+
+    # Unfreeze only the last Transformer block
+    for param in model.trf_blocks[-1].parameters():
+     param.requires_grad = True
+
+    # Unfreeze only the final normalization layer
+    for param in model.final_norm.parameters():
+     param.requires_grad = True
+
+
+    inputs = tokenizer.encoder("You won 3000 euross")
+    inputs = torch.tensor(inputs).unsqueeze(0)
+   
+    with torch.no_grad():
+        outputs = model(inputs)
+      
+    logits = outputs[:, -1, :]
+    label = torch.argmax(logits) #computing the token with the highest probability score
+
+    #calculate training accuracy
+    train_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.train_loader,model,device,num_batches=10)
+
+    #calculate validation accuracy
+    validation_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.val_loader,model,device,num_batches=10)
+
+    #calculate test accuracy
+    testing_accuracy = calc_accuracy.cacl_accuracy_loader(load_data.test_loader,model,device,num_batches=10)
+
+    #print accuracy
+    print(f"Train accuracy:{train_accuracy*100:.2f}%")
+    print(f"Validation accuracy:{validation_accuracy*100:.2f}%")
+    print(f"Testing accuracy:{testing_accuracy*100:.2f}%")
+
+    
+     
+
+   
 
 
     
