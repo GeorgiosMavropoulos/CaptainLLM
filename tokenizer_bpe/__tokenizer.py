@@ -12,6 +12,7 @@ class _Tokenizer:
 
 
     #method to check tokenizer
+    
     def encoder(self,text:str)->list[int]:
         
         #tokenize the text

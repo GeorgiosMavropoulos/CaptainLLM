@@ -3,26 +3,22 @@ from gptmodel.config import GPT_CONFIG_124M as cfg
 from download_datasets.gpt_download import download_and_load_gpt2
 from gptmodel.gpt_model import GPTModel
 from load_weigths.load_weigths import LoadWeigths
-from train_script.generation import TextGeneration
-from tokenizer_bpe.__tokenizer import _Tokenizer
+from .classify_review.classify_review import ReviewClassifierModel
+from tokenizer_bpe.__tokenizer import tokenizer
+from .SplitData.prepare_data import PrepareTraining
 from .training_script.training_classifier import Trainer
 import time
 from .dataloaders.load_data import LoadData
 from .calculate_loss.calculateloss import CalculateClassificationLoss
 import torch
+import matplotlib.pyplot as plt
+
 class FineTune:
     def __init__(self):
       pass
 
     #initialize LoadWeigths class
     load_weigths = LoadWeigths()
-
-    #initialize an object from TextGeneration class
-    generate_text = TextGeneration()
-
-    #create an instance of _Tokenizer class
-    tokenizer = _Tokenizer()
-
 
     #initialiaze an instance of load data class
     load_data = LoadData()
@@ -33,30 +29,21 @@ class FineTune:
     #create an instance of the trainer class
     trainer = Trainer()
 
-    def config_model():
+    #create an instance of the classify review class
+    classify_reviewer = ReviewClassifierModel
 
-        model_configs = { ##available configurations for the GPT2 Model
-        "gpt2-small (124M)": {"emb_dim": 768, "n_layers": 12, "n_heads": 12},
-        "gpt2-medium (355M)": {"emb_dim": 1024, "n_layers": 24, "n_heads": 16},
-        "gpt2-large (774M)": {"emb_dim": 1280, "n_layers": 36, "n_heads": 20},
-        "gpt2-xl (1558M)": {"emb_dim": 1600, "n_layers": 48, "n_heads": 25},
-        }
-
-        gpt2_small_model = "gpt2-small (124M)"
-        
-        
-        cfg.update(model_configs[gpt2_small_model]) #update configurations for the gpt2_small
-        
-        return gpt2_small_model, cfg
+    prepare_data = PrepareTraining()
 
     #call config model method
-    gpt2_small_model,cfg = config_model()
+    gpt2_small_model = GPTModel(cfg)
+    model_size="124M"
     
-    model_size = gpt2_small_model.split(" ")[-1].lstrip("(").rstrip(")")
     settings, params = download_and_load_gpt2(
     model_size=model_size, models_dir="gpt2"
     )
-    gpt2_small_model = GPTModel(cfg)
+
+    
+    
     load_weigths.load_weights_into_gpt(gpt2_small_model, params)
     gpt2_small_model.eval()
 
@@ -69,6 +56,7 @@ class FineTune:
         )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
         
     gpt2_small_model.to(device)
    
@@ -86,6 +74,32 @@ class FineTune:
      param.requires_grad = True
 
 
+
+     #function to validate the model if it can actually classify
+   
+    def test_classification(text):
+             
+             answer = FineTune.classify_reviewer.classify_review(
+             FineTune.gpt2_small_model,
+             text,
+             tokenizer,
+             device=FineTune.device,
+             max_length=FineTune.prepare_data.train_dataset.max_length,
+         )
+             print(answer)
+
+    #validate whether the model makes correct predictions or not
+    text_1 = (
+                     "You are going to become gay. Please come to visit our office for a treatment to prevent you from being gay"
+                     "You have been selected for a special discount of 20%."
+                     )     
+         
+    text_2 = (
+             "Hey baby, I want to feel your big cock"
+             " I am so wet, please come on"
+             )
+
+
     #create a training loop
     @staticmethod
     def train(model,train_loader,val_loader,device):
@@ -93,12 +107,12 @@ class FineTune:
       
       # DEFINE the optimizer and delegate it into a variable
       optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=0.1)
-      num_epochs = 5
+      num_epochs = 4
 
       #train the model
      
       train_losses, val_losses, train_accs, val_accs, examples_seen = \
-      FineTune.trainer.train_classifier(model, train_loader, val_loader, optimizer, device, num_epochs=num_epochs, eval_freq=50,eval_iter=10)
+      FineTune.trainer.train_classifier(model, train_loader, val_loader, optimizer, device, num_epochs=num_epochs, eval_freq=50,eval_iter=15)
       end_time = time.time()
       #calculate the training time
       execution_time_minutes = (end_time - start_time) / 60
@@ -110,9 +124,19 @@ class FineTune:
                        device,
                        num_batches=None
                    )
-       
+
       print(f"Test accuracy: {test_accuracy * 100:.2f}%")
-          
+
+      #save the model's and optimizer's state
+      torch.save({
+    "model_state_dict": model.state_dict(),
+    "optimizer_state_dict": optimizer.state_dict(),
+    "epoch": num_epochs,
+}, "checkpoint.pth") 
+
+
+    
+        
 
 #execute train function
 FineTune.train(
@@ -121,7 +145,8 @@ FineTune.train(
     FineTune.load_data.val_loader,
     FineTune.device
 )
-
+#test if classification actually works
+FineTune.test_classification("Hey baby, I won the lottery. Do you want me to buy you the new GPU you asked for?")
    
     
 
