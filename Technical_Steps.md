@@ -1101,3 +1101,99 @@ To feed a text into the pretrained model, the text is first tokenized using the 
 # Calculate accuracy, freeze weigths and calculate loss
 
 For classification fine-tuning, we first freeze the pretrained GPT-2 model so that its existing weights are not updated during training, and then unfreeze only the final layers we want to fine-tune, such as the final Transformer block and the final normalization layer. We also replace the original output head with a new classification head whose output dimension is set to 2, corresponding to the two possible classes: 0 (not spam) and 1 (spam). During training, the model produces logits for these two classes, and the Cross-Entropy Loss compares these logits with the true labels to measure how wrong the predictions are. The loss is then used during backpropagation to update only the trainable parameters. To calculate accuracy, the model makes predictions by selecting the class with the highest logit using argmax, and these predictions are compared with the true labels. The accuracy is the percentage of predictions that match the correct labels. Therefore, loss is used to guide the training process, while accuracy is used to evaluate how well the model is classifying the data.
+
+
+
+# Fine tune the classifier model
+
+To implement fine tuning we can use the following methods:
+
+```
+"""This file contains the main training and evaluation functions"""
+from ..calculate_loss.calculateloss import CalculateClassificationLoss
+from ..calculate_accuracy_loss.calculate_accuracy_loader import CalcAccuracy
+import torch
+class Trainer:
+    def __init__(self):
+      pass
+ 
+
+
+    #initialize an instance of calculate loss class
+    calc_loss = CalculateClassificationLoss()
+
+    #create an instance of calculate accuracy class
+    calc_accuracy = CalcAccuracy()
+
+    #training function
+    @staticmethod
+    def train_classifier(model, train_loader, val_loader, optimizer, device,num_epochs, eval_freq, eval_iter):
+        
+             #Initialize lists to track losses andexamples seen
+        train_losses, val_losses, train_accs, val_accs = [], [], [], []
+        examples_seen, global_step = 0, -1
+        ##main training loop which trains the model based on the given epochs number
+        for epoch in range(num_epochs):
+            model.train()
+
+            for input_batch, target_batch in train_loader:
+                optimizer.zero_grad() #reset loss gradients from the previous batch iteration
+                loss = Trainer.calc_loss.calc_loss_batch(input_batch, target_batch, model, device) #calculate the loss per batch
+                loss.backward() #apply backpropagation to calculate loss gradient
+                optimizer.step() #update model's weigths based on the computed loss gradient
+                examples_seen += input_batch.shape[0] #calculate how many examples the model saw
+                global_step += 1
+
+                if global_step % eval_freq == 0: #evaluation step 
+                    train_loss, val_loss = Trainer.evaluate_model(
+                    model, train_loader, val_loader, device, eval_iter)
+                    train_losses.append(train_loss)
+                    val_losses.append(val_loss)
+                    print(f"Ep {epoch+1} (Step {global_step:06d}): "
+                    f"Train loss {train_loss:.3f},"
+                    f"Val loss {val_loss:.3f}"
+                    )
+
+
+            #calculate train and validation accuracy
+            train_accuracy = Trainer.calc_accuracy.calc_accuracy_loader(
+            train_loader, model, device, num_batches=eval_iter
+            )
+            val_accuracy = Trainer.calc_accuracy.calc_accuracy_loader(
+            val_loader, model, device, num_batches=eval_iter
+            )
+
+        
+
+            #print training and validation accuracy
+            print(f"Training accuracy: {train_accuracy*100:.2f}% |  ", end="")
+            print(f"Validation accuracy: {val_accuracy*100:.2f}%")
+            ##append train's accuracy and val's accuracy values to the empty lists
+            train_accs.append(train_accuracy)
+            val_accs.append(val_accuracy)
+
+        return train_losses, val_losses, train_accs, val_accs, examples_seen
+
+
+    #evaluate model function
+    @staticmethod
+    def evaluate_model(model, train_loader, val_loader, device, eval_iter):
+         model.eval()
+         with torch.no_grad():
+             train_loss = Trainer.calc_loss.calc_loss_loader(
+             train_loader, model, device, num_batches=eval_iter
+             )
+             val_loss = Trainer.calc_loss.calc_loss_loader(
+             val_loader, model, device, num_batches=eval_iter
+             )
+             model.train()
+         return train_loss, val_loss
+
+
+
+
+```
+These methods calculate the training/validation loss and accuracy.
+Then we can initiate an instance of our model and create the training loop. 
+During the training loop we use the ADAMW's optimizer to train the model with its mistakes and update the weigths.
+Then we measure training/validation's accuracy. In the end we have to measure the accuracy of the test data, the data that the model didn't see during its training
