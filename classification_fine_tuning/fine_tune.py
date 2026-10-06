@@ -73,6 +73,9 @@ class FineTune:
     for param in gpt2_small_model.final_norm.parameters():
      param.requires_grad = True
 
+    for param in gpt2_small_model.out_head.parameters(): #unfreeze the new outhead
+        param.requires_grad = True
+
 
 
      #function to validate the model if it can actually classify
@@ -86,19 +89,10 @@ class FineTune:
              device=FineTune.device,
              max_length=FineTune.prepare_data.train_dataset.max_length,
          )
-             print(answer)
+             return answer
 
-    #validate whether the model makes correct predictions or not
-    text_1 = (
-                     "You are going to become gay. Please come to visit our office for a treatment to prevent you from being gay"
-                     "You have been selected for a special discount of 20%."
-                     )     
          
-    text_2 = (
-             "Hey baby, I want to feel your big cock"
-             " I am so wet, please come on"
-             )
-
+            
 
     #create a training loop
     @staticmethod
@@ -107,9 +101,22 @@ class FineTune:
       
       # DEFINE the optimizer and delegate it into a variable
       optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=0.1)
-      num_epochs = 4
+      num_epochs = 15
 
       #train the model
+        #load the pretrained model
+      checkpoint = torch.load(
+    "checkpoint.pth",
+    map_location=device
+)
+
+      model.load_state_dict(
+      checkpoint["model_state_dict"]
+)
+
+      optimizer.load_state_dict(
+     checkpoint["optimizer_state_dict"]
+)
      
       train_losses, val_losses, train_accs, val_accs, examples_seen = \
       FineTune.trainer.train_classifier(model, train_loader, val_loader, optimizer, device, num_epochs=num_epochs, eval_freq=50,eval_iter=15)
@@ -134,6 +141,8 @@ class FineTune:
     "epoch": num_epochs,
 }, "checkpoint.pth") 
 
+  
+
 
     
         
@@ -146,7 +155,51 @@ FineTune.train(
     FineTune.device
 )
 #test if classification actually works
-FineTune.test_classification("Hey baby, I won the lottery. Do you want me to buy you the new GPU you asked for?")
+tests = [
+    "Congratulations!!!! I was sure that you are going to win the lottary Trevor,",
+
+    "Hey, are we still meeting for coffee at 6 tonight?",
+
+    "Congratulations! You have won a FREE prize! Call now to claim your reward!",
+
+    "Can you send me the notes from today's lecture?",
+
+    "URGENT! You have been selected to receive £5000. Reply YES to claim.",
+
+    "Happy birthday! Hope you have an amazing day!",
+
+    "You won a brand new iPhone! Click here now to collect your prize.",
+
+    "I'll be home around 8, do you need me to pick up anything?",
+
+    "Thanks for helping me with the project yesterday.",
+
+    "FREE entry to win £1000 cash! Text WIN to 80082 now!",
+
+    "Are you free this weekend? I was thinking we could go for a walk.",
+
+    "Congratulations! Your mobile number has won a cash prize of $500.",
+
+    "Don't forget to bring your charger tomorrow.",
+
+    "Exclusive offer! Get 90% OFF all products today only. Buy now!",
+
+    "Hey, can you call me when you finish work?",
+
+    "You have been chosen for a special reward. Call 09061234567 to claim.",
+
+    "I left your keys on the kitchen table.",
+
+    "WINNER! You have won a luxury holiday. Reply CLAIM to receive it.",
+
+    "Good luck with your exam tomorrow! You got this.",
+
+    "Limited time offer! Get cheap loans with no credit check. Apply now!",
+
+    "You've received a bonus of £250. Verify your account immediately to collect it."
+]
+for t in tests:
+    print(FineTune.test_classification(t), "|", t[:60])
    
     
 

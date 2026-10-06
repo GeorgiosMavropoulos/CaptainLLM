@@ -20,7 +20,7 @@ class SpamDataSet(Dataset):
      
 
      #pretokenize texts
-     self.encoded_texts = [self.tokenizer.encode(text) for text in self.data["Text"]]
+     self.encoded_texts = [self.tokenizer.encode(text) for text in self.data["text"]]
 
      if max_length is None: #if max_length has not been delegated, set it equals to the longest encoded length
         self.max_length = self._longest_encoded_length()
@@ -34,7 +34,18 @@ class SpamDataSet(Dataset):
 
     def __getitem__(self, index):
         encoded = self.encoded_texts[index]  #get the indexed encoded text
-        label = self.data.iloc[index]["Label"] #access the label of the encoded text (0 for ham or 1 for spam)
+        label = self.data.iloc[index]["label"] #access the label of the encoded text (0 for ham or 1 for spam)
+        # Convert string labels to class indices
+        if isinstance(label, str):
+            label = label.strip().lower()
+
+        if label == "ham":
+            label = 0
+        elif label == "spam":
+            label = 1
+        else:
+            raise ValueError(f"Unknown label: {label}")
+        
         return (
         torch.tensor(encoded, dtype=torch.long), #transform encoded text's tokens into tensors
         torch.tensor(label, dtype=torch.long) #transforer label's tokens into tensors
