@@ -101,7 +101,7 @@ class FineTune:
       
       # DEFINE the optimizer and delegate it into a variable
       optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=0.1)
-      num_epochs = 15
+      num_epochs =6
 
       #train the model
         #load the pretrained model
@@ -133,8 +133,8 @@ class FineTune:
                    )
 
       print(f"Test accuracy: {test_accuracy * 100:.2f}%")
-
-      #save the model's and optimizer's state
+    
+      
       torch.save({
     "model_state_dict": model.state_dict(),
     "optimizer_state_dict": optimizer.state_dict(),
@@ -143,8 +143,6 @@ class FineTune:
 
   
 
-
-    
         
 
 #execute train function
@@ -155,50 +153,83 @@ FineTune.train(
     FineTune.device
 )
 #test if classification actually works
-tests = [
-    "Congratulations!!!! I was sure that you are going to win the lottary Trevor,",
+tests_normal = [    ("Hey, are we still meeting for lunch today?"),
+    ("I'll call you when I get home."),
+    ("Don't forget to bring your passport tomorrow."),
+    ("Can you send me the notes from today's lecture?"),
+    ("Happy birthday! Hope you have a great day."),
+    ("The meeting has been moved to 3 PM."),
+    ("Thanks for your help yesterday, I really appreciate it."),
+    ("Your package has been delivered to the front door."),
 
-    "Hey, are we still meeting for coffee at 6 tonight?",
+  
+    ("Congratulations! You have won £1,000. Call now to claim your prize."),
+    ("WIN a brand new phone! Text WIN to 80085 now!"),
+    ("FREE cash reward waiting for you! Claim now!"),
+    ("You have been selected for a £500 prize. Call now!"),
+    ("Get FREE entry into our weekly cash draw. Reply WIN now!"),
+    ("URGENT! Claim your guaranteed cash reward today!"),
+    ("You've WON! Call 09012345678 to receive your prize."),
+    ("Exclusive offer! Get £500 cash today. Apply now!"),]
 
-    "Congratulations! You have won a FREE prize! Call now to claim your reward!",
 
-    "Can you send me the notes from today's lecture?",
 
-    "URGENT! You have been selected to receive £5000. Reply YES to claim.",
+tests_medium = [
+   
+    ("Your electricity bill has been paid successfully."),
+    ("Your appointment is confirmed for Monday at 10 AM."),
+    ("Your order is ready for collection. Please bring your confirmation."),
+    ("Your mobile plan has been renewed successfully."),
+    ("Your card payment of £45.20 was successfully processed."),
+    ("Your application has been received. We will contact you shortly."),
+    ("Your account statement is now available. Please log in to view it."),
+    ("Your monthly subscription payment has been received. Thank you."),
 
-    "Happy birthday! Hope you have an amazing day!",
-
-    "You won a brand new iPhone! Click here now to collect your prize.",
-
-    "I'll be home around 8, do you need me to pick up anything?",
-
-    "Thanks for helping me with the project yesterday.",
-
-    "FREE entry to win £1000 cash! Text WIN to 80082 now!",
-
-    "Are you free this weekend? I was thinking we could go for a walk.",
-
-    "Congratulations! Your mobile number has won a cash prize of $500.",
-
-    "Don't forget to bring your charger tomorrow.",
-
-    "Exclusive offer! Get 90% OFF all products today only. Buy now!",
-
-    "Hey, can you call me when you finish work?",
-
-    "You have been chosen for a special reward. Call 09061234567 to claim.",
-
-    "I left your keys on the kitchen table.",
-
-    "WINNER! You have won a luxury holiday. Reply CLAIM to receive it.",
-
-    "Good luck with your exam tomorrow! You got this.",
-
-    "Limited time offer! Get cheap loans with no credit check. Apply now!",
-
-    "You've received a bonus of £250. Verify your account immediately to collect it."
+    
+    ("Your account qualifies for an exclusive cash offer. Apply today."),
+    ("You are eligible for a fast cash loan. Apply now."),
+    ("Get an instant cash advance with no waiting. Apply today!"),
+    ("Your credit limit can be increased immediately. Click to apply."),
+    ("Limited time offer! Get approved for a personal loan today."),
+    ("You have been pre-approved for £5,000. Apply now to receive funds."),
+    ("Special financial offer available now. Contact us to claim."),
+    ("Need cash urgently? Apply now for an instant loan."),
 ]
-for t in tests:
+
+
+tests_hard = [
+    
+    "Your loan application has been approved. Please contact your bank advisor.",
+    "Your mortgage application has been approved. Please speak with your advisor.",
+    "Your university application has been approved. Please check your email.",
+    "Your insurance claim has been approved. We will contact you shortly.",
+    "Your credit card application was successful. Your card will arrive soon.",
+    "Your scholarship application has been approved. Check the student portal.",
+    "Your salary advance request has been approved. Contact HR for details.",
+    "Your refund has been approved and will be credited to your account.",
+
+    
+    "Your loan has been approved! Click here to receive your money.",
+    "Your loan application has been approved. Claim your funds today.",
+    "Your credit application was successful. Apply now to access your money.",
+    "You have been approved for a personal loan. Contact us today.",
+    "Your credit has been approved. Visit the link below to receive your funds.",
+    "Congratulations! Your application has been approved. Claim your cash now.",
+    "Your application was successful! Receive your guaranteed cash today.",
+    "You qualify for £5,000 cash. Complete your application immediately.",
+]
+
+tests_confusing = [
+    ("Your account has been updated. Please review your latest statement."),
+    ("Your payment has been received. No further action is required."),
+    ("Your bank appointment is confirmed for tomorrow at 2 PM."),
+    
+    ("You've been selected for a £2,000 cash reward. Claim it now."),
+    ("Your account is eligible for an exclusive cash bonus. Apply today."),
+    ("Act now to receive your guaranteed £5,000 payment."),
+]
+
+for t in tests_confusing:
     print(FineTune.test_classification(t), "|", t[:60])
    
     
