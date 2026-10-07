@@ -59,187 +59,22 @@ test_df.to_csv("test.csv", index=None)
   """
 
 
-DATASETS_DIR = Path(__file__).resolve().parent
+#visuale new financial spam dataset
+#load csv into dataframe
+df = pd.read_csv("C:/Users/Overkill/Desktop/train-llm/BaseLLM/classification_fine_tuning/datasets/val_new.csv")
 
-FILES = {
-    "train": DATASETS_DIR / "train_new.csv",
-    "validation": DATASETS_DIR / "val_new.csv",
-    "test": DATASETS_DIR / "test_new.csv",
-}
+#examine label distributions
+# Clean the labels
+df['label'] = df['label'].astype(str).str.strip().str.lower()
 
+# Count
+# Count
+print(df['label'].value_counts())
 
-# --------------------------------------------------
-# Load datasets
-# --------------------------------------------------
+# Individual counts
+ham_count = df['label'].eq('ham').sum()
+spam_count = df['label'].eq('spam').sum()
 
-datasets = {}
-
-for split, path in FILES.items():
-    df = pd.read_csv(path)
-
-    # Normalize column names
-    df.columns = df.columns.str.strip().str.lower()
-
-    if "text" not in df.columns or "label" not in df.columns:
-        raise ValueError(
-            f"{path.name} πρέπει να έχει columns: text, label"
-        )
-
-    # Convert text to string and remove surrounding whitespace
-    df["text"] = df["text"].astype(str).str.strip()
-
-    datasets[split] = df
-
-    print(f"\n{'=' * 60}")
-    print(f"{split.upper()}")
-    print(f"{'=' * 60}")
-    print(f"Rows: {len(df)}")
-
-
-# --------------------------------------------------
-# 1. Class balance
-# --------------------------------------------------
-
-print(f"\n{'=' * 60}")
-print("CLASS BALANCE")
-print(f"{'=' * 60}")
-
-for split, df in datasets.items():
-
-    counts = df["label"].value_counts()
-
-    print(f"\n{split.upper()}:")
-    print(f"Total: {len(df)}")
-
-    for label, count in counts.items():
-        percentage = count / len(df) * 100
-        print(f"  {label}: {count} ({percentage:.2f}%)")
-
-
-# --------------------------------------------------
-# 2. Duplicates inside each split
-# --------------------------------------------------
-
-print(f"\n{'=' * 60}")
-print("DUPLICATES INSIDE EACH SPLIT")
-print(f"{'=' * 60}")
-
-for split, df in datasets.items():
-
-    duplicates = df[df.duplicated(subset=["text"], keep=False)]
-
-    print(f"\n{split.upper()}:")
-    print(f"Duplicate rows: {len(duplicates)}")
-
-    if len(duplicates) > 0:
-        print(duplicates.sort_values("text").to_string(index=False))
-
-
-# --------------------------------------------------
-# 3. Duplicate texts between splits
-# --------------------------------------------------
-
-print(f"\n{'=' * 60}")
-print("DUPLICATES BETWEEN SPLITS")
-print(f"{'=' * 60}")
-
-split_names = list(datasets.keys())
-
-for i in range(len(split_names)):
-    for j in range(i + 1, len(split_names)):
-
-        split_a = split_names[i]
-        split_b = split_names[j]
-
-        df_a = datasets[split_a]
-        df_b = datasets[split_b]
-
-        texts_a = set(df_a["text"])
-        texts_b = set(df_b["text"])
-
-        duplicates = texts_a.intersection(texts_b)
-
-        print(
-            f"\n{split_a.upper()} <-> {split_b.upper()}: "
-            f"{len(duplicates)} duplicated texts"
-        )
-
-        if duplicates:
-            for text in duplicates:
-                print(f"  {text[:150]}")
-
-
-# --------------------------------------------------
-# 4. Same text with different labels
-# --------------------------------------------------
-
-print(f"\n{'=' * 60}")
-print("SAME TEXT WITH DIFFERENT LABEL")
-print(f"{'=' * 60}")
-
-all_data = pd.concat(
-    datasets.values(),
-    ignore_index=True
-)
-
-label_counts = (
-    all_data
-    .groupby("text")["label"]
-    .nunique()
-)
-
-conflicting_texts = label_counts[label_counts > 1]
-
-print(f"\nConflicting texts: {len(conflicting_texts)}")
-
-if len(conflicting_texts) > 0:
-
-    for text in conflicting_texts.index:
-
-        rows = all_data[all_data["text"] == text]
-
-        print("\nTEXT:")
-        print(text)
-
-        print("LABELS:")
-        print(rows[["label"]].drop_duplicates().to_string(index=False))
-
-
-# --------------------------------------------------
-# 5. Overall dataset statistics
-# --------------------------------------------------
-
-print(f"\n{'=' * 60}")
-print("OVERALL DATASET")
-print(f"{'=' * 60}")
-
-print(f"Total rows: {len(all_data)}")
-print(f"Unique texts: {all_data['text'].nunique()}")
-
-total_duplicates = len(all_data) - all_data["text"].nunique()
-
-print(f"Duplicate texts overall: {total_duplicates}")
-
-
-# --------------------------------------------------
-# 6. Final summary
-# --------------------------------------------------
-
-print(f"\n{'=' * 60}")
-print("FINAL SUMMARY")
-print(f"{'=' * 60}")
-
-print("\nSplits:")
-for split, df in datasets.items():
-    print(f"  {split}: {len(df)} rows")
-
-print(f"\nOverall duplicate texts: {total_duplicates}")
-print(f"Conflicting labels: {len(conflicting_texts)}")
-
-if total_duplicates == 0:
-    print("✓ No duplicate texts found.")
-
-if len(conflicting_texts) == 0:
-    print("✓ No texts with different labels found.")
-
-print("\nDone.")
+print("Ham:", ham_count)
+print("Spam:", spam_count)
+print(df['text'].duplicated().sum())
