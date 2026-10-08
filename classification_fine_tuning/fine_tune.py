@@ -1,7 +1,7 @@
 ###This is the main file where I load the model, load the pretrained weigths and fine tune the model
-from gptmodel.config import GPT_CONFIG_124M as cfg
+from .gptmodel.config import GPT_CONFIG_124M as cfg
 from download_datasets.gpt_download import download_and_load_gpt2
-from gptmodel.gpt_model import GPTModel
+from .gptmodel.gpt_model import GPTModel
 from load_weigths.load_weigths import LoadWeigths
 from .classify_review.classify_review import ReviewClassifierModel
 from tokenizer_bpe.__tokenizer import tokenizer
@@ -101,7 +101,7 @@ class FineTune:
       
       # DEFINE the optimizer and delegate it into a variable
       optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=0.1)
-      num_epochs =6
+      num_epochs =5
 
       #train the model
         #load the pretrained model
