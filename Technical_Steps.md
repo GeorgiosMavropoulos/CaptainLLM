@@ -1197,3 +1197,12 @@ These methods calculate the training/validation loss and accuracy.
 Then we can initiate an instance of our model and create the training loop. 
 During the training loop we use the ADAMW's optimizer to train the model with its mistakes and update the weigths.
 Then we measure training/validation's accuracy. In the end we have to measure the accuracy of the test data, the data that the model didn't see during its training
+
+
+
+
+# Fine tune an instruction model
+To fine tune an instruction model we need to create a dateset in json format with the style:
+Instructions -> user input -> model response
+Then we can split the data into training/validation/testing dataset and create the training batches
+We can use a variance of instruction templates like ALCAPA or phi-3
