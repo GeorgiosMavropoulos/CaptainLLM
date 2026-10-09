@@ -29,7 +29,7 @@ url = (
 #download the file
 data = download_and_load_file(file_path,url)
 #print data length
-print(f"Data length:{len(data)}")
+#print(f"Data length:{len(data)}")
 
 #print a line
-print(f"Data example:\n{data[10]}")
+#print(f"Data example:\n{data[10]}")
