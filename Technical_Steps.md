@@ -1206,3 +1206,9 @@ To fine tune an instruction model we need to create a dateset in json format wit
 Instructions -> user input -> model response
 Then we can split the data into training/validation/testing dataset and create the training batches
 We can use a variance of instruction templates like ALCAPA or phi-3
+
+
+### Create the collate function and instructions dataset
+1. Firstly, we have to create a function which iterates through the json data and changes the prompt template, to create the corresponding dataset.
+2. Then we have to create the collate function. This functions adds a padding (50256 or "<|endoftext|>"). This padding is being added in order for each batche's sequences
+to have the same length. Then we have to create the target token so the model can predict the next token and replace endoftext with -100 into the targets tensor so as it won't be noticed from the algorithm during training. This helps us to calculate efficiently the training loss
