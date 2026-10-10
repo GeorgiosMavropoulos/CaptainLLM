@@ -8,7 +8,7 @@ class Collate:
         pass
 
 
-    def custom_collate_fn(batch,pad_token_id=50256,device="cpu",ignore_index=-100,allowed_max_length=None,):
+    def custom_collate_fn( self,batch,pad_token_id=50256,device="cpu",ignore_index=-100,allowed_max_length=None,):
         #find the longest sequence on each batch
         batch_max_length = max(len(item)+1 for item in batch)
         inputs_lst, targets_lst = [], []
@@ -47,11 +47,3 @@ class Collate:
         return inputs_tensor,targets_tensor
 
 
-    inputs_1 = [0, 1, 2, 3, 4]
-    inputs_2 = [5, 6]
-    inputs_3 = [7, 8, 9]
-    batch = (inputs_1,inputs_2,inputs_3)
-    inputs,targets =custom_collate_fn(batch)
-    print(inputs)
-    print(targets)
-    
