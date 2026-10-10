@@ -1212,3 +1212,8 @@ We can use a variance of instruction templates like ALCAPA or phi-3
 1. Firstly, we have to create a function which iterates through the json data and changes the prompt template, to create the corresponding dataset.
 2. Then we have to create the collate function. This functions adds a padding (50256 or "<|endoftext|>"). This padding is being added in order for each batche's sequences
 to have the same length. Then we have to create the target token so the model can predict the next token and replace endoftext with -100 into the targets tensor so as it won't be noticed from the algorithm during training. This helps us to calculate efficiently the training loss
+
+
+
+### Dataloaders
+The next step is to create the dataloaders. The dataloaders are important. Pytorch provides the dataloaders class which groups the datasets into batches, optionally shuffles the data and supports paraller data loading through the num_workers variable. It also allow us to specify a custom collate function to process and pad batches of variable-length sequences. Moving the model and the batches from cpu to gpu can is handled seperately.
