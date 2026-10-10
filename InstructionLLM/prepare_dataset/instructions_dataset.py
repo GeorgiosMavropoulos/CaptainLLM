@@ -3,8 +3,7 @@ import torch
 from torch.utils.data import Dataset
 from datasets.download_dataset_with_instructions import data
 from prompt_template.prompt_template import format_input
-from tokenizer_bpe.__tokenizer import _Tokenizer
-tokenizer = _Tokenizer()
+
 class InstructionsDataset(Dataset):
     def __init__(self,data,tokenizer):
         self.data = data

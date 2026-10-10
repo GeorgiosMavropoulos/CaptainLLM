@@ -35,5 +35,5 @@ def format_ph3(entry):
 
 input = format_ph3(data[50])
 response = f"\n<|assistant|>\n{data[50]['output']}"
-print(input + response)
+#print(input + response)
 
