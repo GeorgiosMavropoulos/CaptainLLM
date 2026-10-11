@@ -1217,3 +1217,10 @@ to have the same length. Then we have to create the target token so the model ca
 
 ### Dataloaders
 The next step is to create the dataloaders. The dataloaders are important. Pytorch provides the dataloaders class which groups the datasets into batches, optionally shuffles the data and supports paraller data loading through the num_workers variable. It also allow us to specify a custom collate function to process and pad batches of variable-length sequences. Moving the model and the batches from cpu to gpu can is handled seperately.
+
+
+# Fine tuning
+After preparing the dataloaders the next step is to fine tune the GPT2 model on instructions dataset. This process requires to initialize the model with the pretrained weigths, initialize the the dataloaders, calculate loss functions and create the training loop.
+During training, the model processes batches of input tokens and predict the next tokens. The calculate loss function measures the loss between the model's predictions and target tokens. Backpropagation computes the gradients, and ADAMW's optimizer update model weigths to
+improve its predictions. 
+The training and validation losses are monitored throughout the process to track learning progress and identify potential overfitting. Additionally, sample text is generated after each epoch to qualitatively evaluate the model's responses to instructions.

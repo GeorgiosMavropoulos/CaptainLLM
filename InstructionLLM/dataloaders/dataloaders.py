@@ -52,7 +52,7 @@ class PyTorchDataLoaders:
 
 
 
-        return train_loader, test_loader, val_loader
+        return train_loader,  val_loader, test_loader
 
 torch_loaders = PyTorchDataLoaders()
 torch_loaders.get_loaders()
