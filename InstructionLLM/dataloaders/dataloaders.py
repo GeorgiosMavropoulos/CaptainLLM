@@ -50,10 +50,6 @@ class PyTorchDataLoaders:
                                 shuffle=False #we set shuffle to false since it costs computation time and there is no feaf of the model memorizing the dataset
                                 )
 
-        #let's examine the tensors
-        print("Train loader:")
-        for inputs,targets in train_loader:
-           print(inputs.shape,targets.shape)
 
 
         return train_loader, test_loader, val_loader

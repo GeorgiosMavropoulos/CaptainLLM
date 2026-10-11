@@ -5,7 +5,7 @@ def format_input(entry):
     instruction_test = (
         f"Below is an instruction that describes a task.\n"
         f"Write a response that appropriately completes the request."
-        f"\n\n### Instruction:\n{entry['instruction']}"
+        f"\n\n### Instruction: {entry['instruction']}"
     )
 
     input_text = (
