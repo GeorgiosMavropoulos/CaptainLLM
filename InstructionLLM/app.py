@@ -2,13 +2,13 @@
 import torch
 from dataloaders.dataloaders import torch_loaders
 from tokenizer_bpe.__tokenizer import _Tokenizer
-
 from training_scripts.calculate_loss_functions import CalculateLoss
 from prompt_template.prompt_template import format_input
 from load_model.load_model import LoadModelWeigths
 from training_scripts.train import Train
 from prepare_dataset.split_dataset import val_data
 from time import time
+from plot_losses import plot_loss
 model_with_weigths = LoadModelWeigths()
 
 
@@ -36,16 +36,18 @@ class FineTune:
      self.model.to(torch_loaders.device)
 
      #define the optimizer
-     optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4, weight_decay=0.01)
+     optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5, weight_decay=0.01)
      num_epochs = 2
      #use train script to start training
-     self.trainer.train_model(self.model,
-    self.train_loaders,self.val_loader,optimizer,self.device,num_epochs,eval_freq=5, eval_iter=5,start_context=format_input(val_data[0]),tokenizer=self.tokenizer)
+     train_losses, val_losses, tokens_seen =self.trainer.train_model(self.model,
+    self.train_loaders,self.val_loader,optimizer,self.device,num_epochs,eval_freq=5, eval_iter=5,start_context=format_input(val_data[1]),tokenizer=self.tokenizer)
      end_time = time()
      execution_time_minutes = (end_time - start_time) / 60
      print(f"Training completed in {execution_time_minutes:.2f} minutes.")
 
-
+     #plot losses
+     plot_loss(num_epochs,train_losses,val_losses,tokens_seen)
+     
    
    
   
