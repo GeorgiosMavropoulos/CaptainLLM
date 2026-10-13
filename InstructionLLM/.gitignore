@@ -1,0 +1,11 @@
+# do not commit .pth files since they are too heavy
+*.pth
+
+# exclude __pycache__
+__pycache__/
+
+#exclude json files
+*.json 
+
+#exclude png images
+*.png 

@@ -29,6 +29,7 @@ class FineTune:
         
     #train loop
     def start_training(self):
+
      start_time = time()
      #access model's device
      torch.manual_seed(123)
