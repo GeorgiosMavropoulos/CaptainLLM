@@ -14,6 +14,8 @@ class Train:
         train_losses, val_losses, track_tokens_seen = [], [], [] ##initialize lists to track validation/train losses and track the number of produced tokens
         tokens_seen, global_step = 0, -1
 
+        #declare a variable to store the less vall loss in order to save the best checkpoint state
+        less_val_loss = float('inf')
         for epoch in range(num_epochs): #start the main train loop
             model.train()
             for input_batch, target_batch in train_loader:
@@ -38,6 +40,19 @@ class Train:
                             f"Train loss {train_loss:.3f}, "
                             f"Val loss {val_loss:.3f}"
                             )
+
+                    #compare the validation loss and if it's smaller then the less_val_loss save the checkpoints
+                    if val_loss < less_val_loss:
+                        less_val_loss = val_loss #renew the last value
+                        
+                        torch.save({
+                            "model_state_dict": model.state_dict(),
+                            "optimizer_state_dict": optimizer.state_dict(),
+                                "epoch": epoch +1,
+                                "total_tokens":tokens_seen,
+                                "global_steps":global_step,
+                            }, "checkpoint.pth") 
+                    
             #print a sample text after each epoch
             TextGeneration.generate_and_print_sample(model, tokenizer, device, start_context)
 
@@ -58,7 +73,8 @@ class Train:
        model.train() #start training
        return train_loss, val_loss
 
-
+    
+        
 
 
 
