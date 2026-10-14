@@ -38,16 +38,16 @@ class FineTune:
 
      #define the optimizer
      optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5, weight_decay=0.01)
-     num_epochs = 2
+     num_epochs = 3
      #use train script to start training
-     train_losses, val_losses, tokens_seen =self.trainer.train_model(self.model,
-    self.train_loaders,self.val_loader,optimizer,self.device,num_epochs,eval_freq=5, eval_iter=5,start_context=format_input(val_data[1]),tokenizer=self.tokenizer)
+     train_losses, val_losses, tokens_seen =self.trainer.train_model(self.model, 
+    self.train_loaders,self.val_loader,optimizer,self.device,num_epochs,eval_freq=5, eval_iter=5,start_context=format_input(val_data[2]),tokenizer=self.tokenizer)
      end_time = time()
      execution_time_minutes = (end_time - start_time) / 60
      print(f"Training completed in {execution_time_minutes:.2f} minutes.")
 
      #plot losses
-     plot_loss(num_epochs,train_losses,val_losses,tokens_seen)
+     plot_loss(num_epochs,tokens_seen,train_losses,val_losses)
      
    
    
