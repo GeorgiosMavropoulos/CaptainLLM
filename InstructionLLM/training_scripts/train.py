@@ -51,7 +51,7 @@ class Train:
                                 "epoch": epoch +1,
                                 "total_tokens":tokens_seen,
                                 "global_steps":global_step,
-                            }, "checkpoint.pth") 
+                            }, "best_checkpoint.pth") 
                     
             #print a sample text after each epoch
             TextGeneration.generate_and_print_sample(model, tokenizer, device, start_context)
