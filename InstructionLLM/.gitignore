@@ -9,3 +9,6 @@ __pycache__/
 
 #exclude png images
 *.png 
+
+#exclude*.env from git
+*.env
