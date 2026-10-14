@@ -6,7 +6,12 @@ import json
 from tokenizer_bpe.__tokenizer import _Tokenizer
 from prompt_template.prompt_template import format_input
 from training_scripts.generation import TextGeneration
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 generate_text = TextGeneration()
+
 model = GPTModel(cfg)
 class EvaluateModel:
     def __init__(self):
@@ -18,12 +23,13 @@ class EvaluateModel:
         self.test_dataset = self.split_dataset() #split the given dataset
         self.load_checkpoint()
         print(next(self.model.parameters()).device)
+        self.checkpoint_path = os.getenv("CHECKPOINT_PATH")
         
 
     #function to load the best checkpoint path
     
     def load_checkpoint(self):
-        checkpoint = torch.load("C:/Users/Overkill/Desktop/train-llm/BaseLLM/InstructionLLM/best_checkpoint.pth", map_location=self.device)
+        checkpoint = torch.load(self.checkpoint_path, map_location=self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.model.eval() #use eval() to disable training behaviors
         return self.model
