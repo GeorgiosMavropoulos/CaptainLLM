@@ -405,18 +405,6 @@ These limitations should be considered when interpreting the results.
 
 ---
 
-# 📖 References
-
-### Primary Learning Resource
-
-Sebastian Raschka,
-***Build a Large Language Model (From Scratch)***
-
-Official companion material:
-
-https://www.oreilly.com/library/view/build-a-large/9781633437166/
-
-
 
 ---
 
@@ -436,4 +424,4 @@ The emphasis is on:
 
 ✅ GPT-2 architecture, pretraining pipeline, **classifier**, and **instruction model** implemented.
 
-🚧 Ongoing: detailed evaluation, experiments, technical report, and the extension to code generation.
+✅ GPT-2 Instruction Model Fine-Tuned
