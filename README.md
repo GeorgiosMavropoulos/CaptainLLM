@@ -205,16 +205,7 @@ The instruction model fine-tunes GPT-2 to follow natural-language instructions t
 * The model is trained with next-token prediction on the formatted examples.
 * After fine-tuning, the model generates responses to unseen instructions.
 
-```text
-### Instruction:
-<task description>
 
-### Input:
-<optional context>
-
-### Response:
-<model output>
-```
 
 **Example**
 
@@ -425,9 +416,7 @@ Official companion material:
 
 https://www.oreilly.com/library/view/build-a-large/9781633437166/
 
-### Additional References
 
-Additional papers, documentation, datasets, and technical resources used during development will be documented here.
 
 ---
 
