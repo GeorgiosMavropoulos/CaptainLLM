@@ -188,9 +188,9 @@ Text → Tokenizer → GPT-2 → Last-token hidden state → Linear → Class lo
 
 | Split      | Loss | Accuracy |
 | ---------- | ---: | -------: |
-| Training   |  TBD |      TBD |
-| Validation |  TBD |      TBD |
-| Test       |  TBD |      TBD |
+| Training   |  0.33|      0.53|
+| Validation |  0.68|      0.59|
+| Test       |  0.78|      0.81|
 
 ---
 
@@ -220,9 +220,9 @@ Response:    TBD
 
 | Metric                | Result |
 | --------------------- | -----: |
-| Training loss         |    TBD |
-| Validation loss       |    TBD |
-| Response quality      |    TBD |
+| Training loss         |    1.14|
+| Validation loss       |   1.554|
+| Response quality      |  6.7/10|
 
 ---
 
