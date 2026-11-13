@@ -213,7 +213,7 @@ The instruction model fine-tunes GPT-2 to follow natural-language instructions t
 Instruction: Rewrite the sentence in the passive voice.
 Input:       The chef cooked the meal.
 
-Response:    TBD
+Response:   The mean was cooked by the chef
 ```
 
 **Results**
