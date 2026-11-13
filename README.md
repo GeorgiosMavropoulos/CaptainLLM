@@ -257,8 +257,36 @@ Every significant experiment should be reproducible and documented.
 .
 ├── README.md
 │
-├── src/
-│   ├── tokenizer/
+├── InstructionLLM/
+│   ├── dataloaders
+│   ├── evaluate_model_script
+│   ├── external_evaluation_model
+│   ├── gptmodel
+│   ├── load_model
+│   ├── multiheadattention
+│   ├── prepare_dataset
+│   ├── prompt_template
+│   ├── tokenizer_bpe
+│   ├── training_scripts
+│   ├── app.py
+│   ├── inference.py
+│   ├── instructions_data.json
+├── classification_fine_tuning
+    ├── SplitData
+    ├── calculate_accuracy_loss
+    ├── classify_review
+    ├── dataloaders
+    ├── datasets
+    ├── gptmodel
+    ├── sms spam collection
+    ├── tokenizer_bpe
+    ├── training_script
+    ├── DockeFile
+    ├── README.md
+    ├── fine_tune.py
+    ├── inference.py
+    ├── requirements_inference.txt
+    ├── tokenizer/
 │   ├── model/
 │   │   ├── attention.py
 │   │   ├── transformer.py
