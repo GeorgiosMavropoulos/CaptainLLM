@@ -286,31 +286,12 @@ Every significant experiment should be reproducible and documented.
     ├── fine_tune.py
     ├── inference.py
     ├── requirements_inference.txt
-    ├── tokenizer/
-│   ├── model/
-│   │   ├── attention.py
-│   │   ├── transformer.py
-│   │   └── gpt.py
-│   ├── data/
-│   ├── training/
-│   ├── classifier/
-│   ├── instruction/
-│   └── generation/
-│
-├── experiments/
-│   ├── baseline/
-│   ├── classifier/
-│   └── instruction_tuning/
-│
-├── notebooks/
-├── configs/
-├── tests/
-├── checkpoints/
-├── results/
-└── report/
-```
+├── download_datasts/ 
+├── embeddings/
+├── loadweigths/
+├── vocabulary
 
-The exact structure may evolve as the project grows.
+
 
 ---
 
@@ -321,10 +302,9 @@ The exact structure may evolve as the project grows.
 * training loss
 * validation loss
 * perplexity
-
-```text
-PPL = exp(cross_entropy_loss)
 ```
+
+
 
 ## Classifier
 
@@ -360,7 +340,7 @@ Results are accompanied by details about the experimental setup so that comparis
 * PyTorch
 * NumPy
 * tiktoken (GPT-2 BPE tokenizer)
-* Git / GitHub
+
 
 ---
 
